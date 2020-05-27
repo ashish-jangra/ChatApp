@@ -18,7 +18,10 @@ class Home extends Component {
 		super(props);
 	}
 	handleSelectContact = (contact) => {
-		this.props.history.push(`/chat/${contact.name}`);
+		this.props.history.push(`/chat/${contact.name}`, {
+			name: this.props.location.state.name,
+			email: this.props.location.state.email
+		});
   };
   handleOpenContacts = () => {
     this.props.history.push('/contacts')

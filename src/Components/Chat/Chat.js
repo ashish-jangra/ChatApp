@@ -94,6 +94,7 @@ const styles = (theme) => ({
 class Chat extends Component {
 	constructor(props) {
 		super(props);
+		console.log("histoary data", this.props.location.state)
 		let contact = contacts.find((item) => item.name === this.props.match.params.contact);
 		this.state = {
 			contact

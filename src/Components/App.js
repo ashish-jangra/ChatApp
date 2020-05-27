@@ -10,6 +10,7 @@ import LandingPage from './Landing/LandingPage';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import ProfilePage from './ProfilePage/ProfilePage';
 import AddContact from '../Components/Contacts/AddContact';
+import LoginPage from '../Components/Landing/LoginPage';
 
 class App extends Component {
 	constructor(props) {
@@ -27,6 +28,7 @@ class App extends Component {
 			<MuiThemeProvider theme={createMuiTheme(themes.whatsApp)}>
 				<BrowserRouter>
 					<Switch>
+						<Route exact path="/login" component={LoginPage} />
 						<Route
 							exact
 							path="/chat/:contact"

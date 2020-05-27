@@ -90,7 +90,10 @@ class LandingPage extends Component {
 		}
 	};
   handleOpenContacts = () => {
-    this.props.history.push('/contacts')
+    this.props.history.push('/contacts', {
+			name: this.props.location.state.name,
+			email: this.props.location.state.email,
+		})
   }
 	render() {
 		const { classes, ...remProps } = this.props;
