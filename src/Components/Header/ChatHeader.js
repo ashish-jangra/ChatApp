@@ -15,6 +15,7 @@ const styles = (theme) => {
 	console.log(theme);
 	return {
 		heading: {
+			textTransform: 'capitalize',
 			paddingLeft: '8px',
 			textAlign: 'left',
 			whiteSpace: 'nowrap',
@@ -42,11 +43,11 @@ const styles = (theme) => {
 		},
 		videoIcon: {
 			color: theme.palette.primary.contrastText,
-			paddingRight: '8px',
+			// paddingRight: '8px',
 		},
 		callIcon: {
 			color: theme.palette.primary.contrastText,
-			paddingRight: '0px',
+			// paddingRight: '0px',
 		},
 		moreIcon: {
 			color: theme.palette.primary.contrastText,

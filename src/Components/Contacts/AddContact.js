@@ -3,6 +3,7 @@ import { Paper, TextField, Container, Grid, Button, Card } from '@material-ui/co
 import { withStyles } from '@material-ui/core/styles';
 import { AccountCircle as AccountCircleIcon, Email as EmailIcon, Call as ContactIcon } from '@material-ui/icons';
 import SimpleHeader from '../Header/SimpleHeader';
+import {addContact} from '../serviceClass';
 
 const styles = (theme) => ({
   root: {
@@ -66,7 +67,21 @@ class AddContact extends Component {
     if(!this.isValidInput()){
       return;
     }
-    console.log("save contact");
+    let {name, email} = this.state;
+    name = name.trim();
+    email = email.trim();
+    addContact({
+      name, email
+    })
+    .then(data=>{
+      console.log("[AddContact] handleAddContact received saved contact data", data)
+      this.props.history.replace(`/chat/${data.email}`, {
+        contact: data.contact
+      });
+    })
+    .catch(err=>{
+      console.log("[AddContact] handleAddContact error adding contact", err)
+    })
   }
   handleCancel = () => {
     this.props.history.goBack();
@@ -109,14 +124,6 @@ class AddContact extends Component {
 								<TextField color="secondary" error={this.state.invalidEmail} onChange={(e)=> this.handleInputChange("email",e)} className={classes.input} placeholder="Email" />
 							</Grid>
 						</Grid>
-            {/* <Grid className={classes.row} container>
-							<Grid item xs={1}>
-                <ContactIcon />
-              </Grid>
-							<Grid item xs={11} className={classes.inputContainer}>
-								<TextField onChange={(e)=> this.handleInputChange("contact",e)} className={classes.input} placeholder="Contact Number" />
-							</Grid>
-						</Grid> */}
             <Grid container>
               <Grid className={classes.cancelButtonContainer} item xs={6}>
                 <Button onClick={this.handleCancel} color="secondary" variant="outlined">

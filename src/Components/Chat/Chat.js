@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { Box, Container, Typography, TextField, InputBase } from '@material-ui/core';
-import { Send as SendIcon, InsertEmoticon } from '@material-ui/icons';
+import {connect} from 'react-redux';
+import { Box, Container, Typography, InputBase } from '@material-ui/core';
+import { Send as SendIcon } from '@material-ui/icons';
 import { withStyles } from '@material-ui/core/styles';
-import contacts from '../../Data/Contacts';
 import ChatHeader from '../Header/ChatHeader';
 
 const styles = (theme) => ({
@@ -56,7 +56,7 @@ const styles = (theme) => ({
 	textFieldContainer: {
 		width: '100%',
 		backgroundColor: 'white',
-		borderRadius: '22px',
+		borderRadius: '24px',
 		padding: '0 20px',
 		display: 'flex',
 		alignItems: 'center',
@@ -95,11 +95,16 @@ class Chat extends Component {
 	constructor(props) {
 		super(props);
 		console.log("histoary data", this.props.location.state)
-		let contact = contacts.find((item) => item.name === this.props.match.params.contact);
+		let contact = (this.props.location.state && this.props.location.state.contact) || {
+			name: 'Loading...',
+			email: 'anonymous@chatapp.com',
+			chats: []
+		};
 		this.state = {
 			contact
 		};
 		window.scrollTo(0, document.body.scrollHeight);
+		this.inputRef = React.createRef();
 	}
 	handleMessageTextChange = (e) => {
 		if(e.target.value.endsWith('\n'))
@@ -108,35 +113,52 @@ class Chat extends Component {
 			messageText: e.target.value,
 		});
 	};
+	formatNum = num => ("0"+num).slice(-2);
+	getTimeString = (date) => {
+		if(!date)
+			date = new Date();
+		else
+			date = new Date(date);
+		let hours = date.getHours()%12 || 12;
+		let ampm = [' am', ' pm'][Math.floor(date.getHours()/12)];
+		return this.formatNum(hours)+":"+this.formatNum(date.getMinutes())+ampm
+	}
 	handleMessageSend = () => {
 		let message = this.state.messageText.trim();
 		let contact = JSON.parse(JSON.stringify(this.state.contact));
 		if(contact.type === 'group'){
 			this.props.socket.emit('sendMessageInGroup', {
 				groupName: this.props.match.params.contact,
-				message
+				msg: message
+			})
+		}
+		else{
+			this.props.socket.emit('sendPersonalMessage', {
+				to: this.state.contact.userId,
+				msg: message,
+				sent: new Date()
 			})
 		}
 		if (contact.chats && Number.isInteger(contact.chats.length))
 			contact.chats.push({
-				from: 'me',
+				from: this.props.authData.email,
 				msg: message,
 				// time: `${new Date().getHours()}:${new Date().getMinutes()}`
-				time: '11:06AM',
+				sent: new Date(),
 			});
 		else
 			contact.chats = [
 				{
-					from: 'me',
+					from: this.props.authData.email,
 					msg: this.state.messageText,
 					// time: `${new Date().getHours()}:${new Date().getMinutes()}`
-					time: '11:06AM',
+					sent: new Date(),
 				},
 			];
 		this.setState({messageText: '', contact})
 	};
 	componentDidUpdate(prevProps, prevState) {
-		window.scrollTo(0, document.body.scrollHeight);
+		this.inputRef.current && this.inputRef.current.focus();
 	}
 	handleKeyPress = (e) => {
 		if (e.keyCode === 13) {
@@ -150,12 +172,14 @@ class Chat extends Component {
 		socket.emit('joinRoom', {
 			groupName: this.props.match.params.contact
 		})
-		socket.on('message', (data)=>{
-			let contact = JSON.parse(JSON.stringify(this.state.contact))
-			if(contact.chats && Number.isInteger(contact.chats.length))
-				contact.chats.push(data)
-			else
-				contact.chats = [data]
+		socket.on('receiveMessage', (data)=>{
+			let contact = this.state.contact;
+			if(data.from !== contact.email)
+				return;
+			contact.chats.push({
+				from: data.from,
+				msg: data.msg
+			})
 			this.setState({
 				contact
 			})
@@ -175,32 +199,33 @@ class Chat extends Component {
 				>
 					{this.state.contact &&
 						this.state.contact.chats &&
-						this.state.contact.chats.length &&
+						this.state.contact.chats[0] &&
 						this.state.contact.chats.map((chat, index) => (
 							<Box
 								key={index}
 								className={classes.messageContainer}
 								display="flex"
 								style={{ marginBottom: index === this.state.contact.chats.length - 1 ? '0px' : '8px' }}
-								justifyContent={chat.from === 'me' ? 'flex-end' : 'flex-start'}
+								justifyContent={chat.from === this.props.authData.email ? 'flex-end' : 'flex-start'}
 							>
-								<Box className={chat.from === 'me' ? classes.myMessageBox : classes.otherMessageBox}>
+								<Box className={chat.from === this.props.authData.email ? classes.myMessageBox : classes.otherMessageBox}>
 									<Typography variant="body2">
 										{chat.msg}
 									</Typography>
 									<Typography variant="caption" className={classes.chatFeedback}>
-										{chat.time}
+										{this.getTimeString(chat.sent)}
 									</Typography>
 								</Box>
 							</Box>
 						))}
 				</Container>
-				{/* <Box style={{height: '90px', background: 'lightgray'}} /> */}
 				<Box className={classes.inputContainer}>
 					<Box className={classes.textFieldContainer}>
 						<InputBase
+							inputRef={this.inputRef}
+							autoFocus={true}
 							multiline={true}
-							rowsMax={4}
+							rowsMax={6}
 							onKeyUp={this.handleKeyPress}
 							value={this.state.messageText}
 							onChange={this.handleMessageTextChange}
@@ -218,4 +243,10 @@ class Chat extends Component {
 	}
 }
 
-export default withStyles(styles, { withTheme: true })(Chat);
+const mapStateToProps = state => ({
+	authData: {
+		email: state.email
+	}
+})
+
+export default connect(mapStateToProps)(withStyles(styles, { withTheme: true })(Chat));

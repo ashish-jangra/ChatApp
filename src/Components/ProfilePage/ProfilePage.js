@@ -48,7 +48,7 @@ class ProfilePage extends Component{
     return (
       <Paper className={classes.rootPaper} square>
         <Box style={{position: 'relative', height: '100vw', overflow: 'hidden'}}>
-          <img className={classes.profileImage} src={ProfilePic} />
+          <img alt="profile pic" className={classes.profileImage} src={ProfilePic} />
           <Typography className={classes.userName} variant="h6">
             John Wick
           </Typography>

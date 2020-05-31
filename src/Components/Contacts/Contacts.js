@@ -1,12 +1,18 @@
 import React, { Component } from 'react';
 import { MenuList, MenuItem, ListItemAvatar, Avatar, ListItemText, Box } from '@material-ui/core';
 import { Person as PersonIcon, GroupAdd as GroupAddIcon, PersonAdd as PersonAddIcon } from '@material-ui/icons';
-import contacts from '../../Data/Contacts';
 import { withStyles } from '@material-ui/core/styles';
 import ContactHeader from '../Header/ContactHeader';
+import {getContactsList} from '../serviceClass';
 
 const styles = (theme) => ({
 	overflowText: {
+		whiteSpace: 'nowrap',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+	},
+	headingText: {
+		textTransform: 'capitalize',
 		whiteSpace: 'nowrap',
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
@@ -20,18 +26,34 @@ const styles = (theme) => ({
 class Contacts extends Component {
 	constructor(props) {
 		super(props);
+		this.state = {
+			contacts: []
+		}
 	}
 	handleSelectContact = (contact) => {
-		this.props.history.push(`/chat/${contact.name}`);
+		this.props.history.push(`/chat/${contact.email}`, {
+			contact
+		});
 	};
 	handleAddContact = () => {
 		this.props.history.push('/addContact');
+	}
+	componentDidMount(){
+		getContactsList()
+		.then(data => {
+			this.setState({
+				contacts: data
+			})
+		})
+		.catch(err=>{
+			console.log("cant load contacts list", err);
+		})
 	}
 	render() {
 		const { classes } = this.props;
 		return (
 			<React.Fragment>
-				<ContactHeader headerText={{primary: 'Select Contact', secondary: `${contacts.length} Contacts`}} />
+				<ContactHeader headerText={{primary: 'Select Contact', secondary: `${this.state.contacts.length} Contacts`}} />
 				<MenuList>
 					<MenuItem onClick={this.handleAddGroup}>
 						<ListItemAvatar>
@@ -49,7 +71,7 @@ class Contacts extends Component {
 						</ListItemAvatar>
 						<ListItemText primary="New Contact" />
 					</MenuItem>
-					{contacts.map((contact, index) => {
+					{this.state.contacts.map((contact, index) => {
 						if(contact.type === "group")
 							return;
 						return (<Box key={index}>
@@ -60,7 +82,7 @@ class Contacts extends Component {
 									</Avatar>
 								</ListItemAvatar>
 								<ListItemText
-									classes={{ primary: classes.overflowText, secondary: classes.overflowText }}
+									classes={{ primary: classes.headingText, secondary: classes.overflowText }}
 									primary={contact.name}
 									secondary={contact.about}
 								/>

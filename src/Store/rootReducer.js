@@ -1,21 +1,12 @@
 const initialState = {
-  headerText: 'WhatsApp'
+  
 }
 
 const rootReducer = (state = initialState, action) => {
-  if(action.type === 'SET_HEADER_TEXT_ONLY'){
+  if(action.type === 'SET_AUTH_DATA'){
     return {
       ...state,
-      headerText: action.text,
-      showOptions: false
-    }
-  }
-  else if(action.type === 'SET_HEADER_TEXT_OPTIONS'){
-    return {
-      ...state,
-      headerText: action.text || state.headerText,
-      showOptions: true,
-      group: action.group
+      ...action.authData
     }
   }
   return state;
