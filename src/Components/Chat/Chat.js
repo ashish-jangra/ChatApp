@@ -4,6 +4,7 @@ import { Box, Container, Typography, InputBase } from '@material-ui/core';
 import { Send as SendIcon } from '@material-ui/icons';
 import { withStyles } from '@material-ui/core/styles';
 import ChatHeader from '../Header/ChatHeader';
+import {getChatTimeString} from '../Utility/CommonFunctions';
 
 const styles = (theme) => ({
 	root: {
@@ -19,6 +20,7 @@ const styles = (theme) => ({
 		marginBottom: '8px',
 	},
 	myMessageBox: {
+		position: 'relative',
 		wordBreak: 'break-word',
 		maxWidth: '80%',
 		padding: '8px 12px',
@@ -26,6 +28,7 @@ const styles = (theme) => ({
 		backgroundColor: '#cfe9ba',
 	},
 	otherMessageBox: {
+		position: 'relative',
 		wordBreak: 'break-word',
 		maxWidth: '80%',
 		padding: '8px 12px',
@@ -33,11 +36,10 @@ const styles = (theme) => ({
 		backgroundColor: 'white',
 	},
 	chatFeedback: {
-		position: 'relative',
-		bottom: 0,
-		paddingLeft: '8px',
-		display: 'block',
-		textAlign: 'right',
+		position: 'absolute',
+		fontSize: '0.7rem',
+		bottom: '2px',
+		right: '12px',
 		color: 'gray',
 	},
 	inputContainer: {
@@ -113,16 +115,6 @@ class Chat extends Component {
 			messageText: e.target.value,
 		});
 	};
-	formatNum = num => ("0"+num).slice(-2);
-	getTimeString = (date) => {
-		if(!date)
-			date = new Date();
-		else
-			date = new Date(date);
-		let hours = date.getHours()%12 || 12;
-		let ampm = [' am', ' pm'][Math.floor(date.getHours()/12)];
-		return this.formatNum(hours)+":"+this.formatNum(date.getMinutes())+ampm
-	}
 	handleMessageSend = () => {
 		let message = this.state.messageText.trim();
 		let contact = JSON.parse(JSON.stringify(this.state.contact));
@@ -167,13 +159,8 @@ class Chat extends Component {
 			}
 		}
 	};
-	componentDidMount(){
-		const {socket} = this.props;
-		socket.emit('joinRoom', {
-			groupName: this.props.match.params.contact
-		})
-		socket.on('receiveMessage', (data)=>{
-			let contact = this.state.contact;
+	handleReceiveMessage = (data) => {
+		let contact = this.state.contact;
 			if(data.from !== contact.email)
 				return;
 			contact.chats.push({
@@ -183,13 +170,21 @@ class Chat extends Component {
 			this.setState({
 				contact
 			})
+	}
+	componentDidMount(){
+		const {socket} = this.props;
+		socket.emit('joinRoom', {
+			groupName: this.props.match.params.contact
 		})
+		socket.on('receiveMessage', this.handleReceiveMessage);
 	}
 	componentWillUnmount(){
 		this.props.socket.off('test')
+		this.props.socket.removeEventListener('receiveMessage', this.handleReceiveMessage);
 	}
 	render() {
 		const { classes} = this.props;
+		let spaces = <span style={{marginLeft: '4em'}} />
 		return (
 			<React.Fragment>
 				<ChatHeader headerText={this.state.contact.name} isGroup={this.state.contact.type === 'group'} />
@@ -210,10 +205,10 @@ class Chat extends Component {
 							>
 								<Box className={chat.from === this.props.authData.email ? classes.myMessageBox : classes.otherMessageBox}>
 									<Typography variant="body2">
-										{chat.msg}
+										{chat.msg} {spaces}
 									</Typography>
 									<Typography variant="caption" className={classes.chatFeedback}>
-										{this.getTimeString(chat.sent)}
+										{getChatTimeString(chat.sent)}
 									</Typography>
 								</Box>
 							</Box>

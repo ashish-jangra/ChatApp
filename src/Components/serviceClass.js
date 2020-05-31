@@ -39,7 +39,6 @@ export const getContacts = () => {
         contact.chats = contact.messages;
         delete contact.messages;
       });
-      console.log("[SC] send contacts", data);
       return data;
     })
     .catch((err) => {
