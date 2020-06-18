@@ -96,17 +96,27 @@ const styles = (theme) => ({
 class Chat extends Component {
 	constructor(props) {
 		super(props);
-		console.log("histoary data", this.props.location.state)
-		let contact = (this.props.location.state && this.props.location.state.contact) || {
+		let contact, dummyContact = {
 			name: 'Loading...',
 			email: 'anonymous@chatapp.com',
 			chats: []
 		};
+		if(this.props.location.state && this.props.location.state.contact){
+			contact = this.props.contacts.find(ct => ct.email === this.props.location.state.contact.email) || {
+				name: contact.name,
+				email: contact.email,
+				chats: []
+			};
+		}
+		else{
+			contact = dummyContact;
+		}
 		this.state = {
 			contact
 		};
 		window.scrollTo(0, document.body.scrollHeight);
 		this.inputRef = React.createRef();
+		this.lastMsgRef = React.createRef();
 	}
 	handleMessageTextChange = (e) => {
 		if(e.target.value.endsWith('\n'))
@@ -147,10 +157,18 @@ class Chat extends Component {
 					sent: new Date(),
 				},
 			];
+		// focus again on msg input
+		this.inputRef.current && this.inputRef.current.focus();
 		this.setState({messageText: '', contact})
 	};
 	componentDidUpdate(prevProps, prevState) {
-		this.inputRef.current && this.inputRef.current.focus();
+		// auto scroll to bottom on receiving new msg
+		if(prevState.contact.chats.length < this.state.contact.chats.length){
+			this.lastMsgRef.current && this.lastMsgRef.current.scrollIntoView({
+				behavior: 'smooth',
+				block: 'end'
+			})
+		}
 	}
 	handleKeyPress = (e) => {
 		if (e.keyCode === 13) {
@@ -160,9 +178,15 @@ class Chat extends Component {
 		}
 	};
 	handleReceiveMessage = (data) => {
+		console.log("[Chat] handlereceivemsg")
 		let contact = this.state.contact;
-			if(data.from !== contact.email)
-				return;
+		let {from, ...msg} = data;
+		this.props.addChat({
+			contact: from,
+			msg
+		})
+		if(from === contact.email){
+			this.props.socket.emit('clearUnreadMessages', {userId: this.state.contact.userId})
 			contact.chats.push({
 				from: data.from,
 				msg: data.msg
@@ -170,12 +194,15 @@ class Chat extends Component {
 			this.setState({
 				contact
 			})
+		}
 	}
 	componentDidMount(){
 		const {socket} = this.props;
-		socket.emit('joinRoom', {
-			groupName: this.props.match.params.contact
-		})
+		this.props.clearUnreadMsg(this.state.contact.email);
+		socket.emit('clearUnreadMessages', {userId: this.state.contact.userId})
+		// socket.emit('joinRoom', { 
+		// 	groupName: this.props.match.params.contact
+		// })
 		socket.on('receiveMessage', this.handleReceiveMessage);
 	}
 	componentWillUnmount(){
@@ -197,6 +224,7 @@ class Chat extends Component {
 						this.state.contact.chats[0] &&
 						this.state.contact.chats.map((chat, index) => (
 							<Box
+								ref={index === this.state.contact.chats.length-1 ? this.lastMsgRef : null}
 								key={index}
 								className={classes.messageContainer}
 								display="flex"
@@ -241,7 +269,14 @@ class Chat extends Component {
 const mapStateToProps = state => ({
 	authData: {
 		email: state.email
-	}
+	},
+	contacts: state.contacts
 })
 
-export default connect(mapStateToProps)(withStyles(styles, { withTheme: true })(Chat));
+const mapDispatchToProps = dispatch => ({
+	setContacts: (contacts) => dispatch({type: 'SET_CONTACTS', contacts}),
+	addChat: (payload) => dispatch({type: 'ADD_CHAT', ...payload}),
+	clearUnreadMsg: (contact) => dispatch({type: 'SET_UNREAD_MESSAGE', contact, count: 0})
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles, { withTheme: true })(Chat));

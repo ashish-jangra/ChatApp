@@ -11,66 +11,90 @@ import AddContact from "../Components/Contacts/AddContact";
 import LoginPage from "../Components/Landing/LoginPage";
 import { connect } from "react-redux";
 import { getAuthVerified } from "./serviceClass";
+import { hostURL } from "./config";
 
 class App extends Component {
   constructor(props) {
     super(props);
     themes.whatsApp.palette.type = "light";
     let cookies = this.parseCookie(document.cookie);
-    console.log("[App] cookies", cookies)
-    if(cookies.userId){
+    console.log("[App] cookies", cookies);
+    if (cookies.userId) {
       this.props.setAuthData({
         userId: cookies.userId,
         username: cookies.name,
-        email: cookies.email
-      })
+        email: cookies.email,
+      });
       getAuthVerified()
-      .then(authData => {
-        if(!authData.isAuth)
-          throw "Not authenticated";
-      })
-      .catch(err => {
-        console.log("error verifying auth", err);
-        this.props.setAuthData({
-          userId: undefined,
-          name: undefined,
-          email: undefined
+        .then((response) => {
+          console.log("returned authdata", response);
+          if (!response.isAuth || !response.authData)
+            throw Error("Not authenticated");
+          this.props.setAuthData({
+            username: response.authData.name,
+            userId: response.authData.userId,
+            email: response.authData.email,
+            authToken: response.authData.authToken,
+          });
         })
-      })
+        .catch((err) => {
+          console.log("error verifying auth", err.message);
+          this.props.setAuthData({
+            userId: undefined,
+            name: undefined,
+            email: undefined,
+          });
+        });
     }
   }
-  parseCookie = cookieString => {
+  parseCookie = (cookieString) => {
     cookieString = cookieString || "";
     let cookieObj = {};
-    cookieString.split(';').map(cookie => {
-      let [key, value] = cookie.split('=');
-      if(!key || !value)
-        return;
+    cookieString.split(";").map((cookie) => {
+      let [key, value] = cookie.split("=");
+      if (!key || !value) return;
       key = key.trim();
       value = value.trim();
       cookieObj[key] = value;
-    })
+    });
     return cookieObj;
-  }
+  };
+  connectToSocket = () => {
+    console.log("send conn authData", this.props.authData);
+    this.setState({
+      socket: io(hostURL, {
+        query: "authData=" + JSON.stringify(this.props.authData),
+      }),
+    });
+  };
   componentDidMount() {
     // this.state.socket.emit('chat');
-	}
-	componentDidUpdate(prevProps){
-		if(!prevProps.authData.email && this.props.authData.email){
-			this.setState({
-				socket: io("http://192.168.43.11:4000", {query: 'authData=' + JSON.stringify(this.props.authData)})
-			})
-		}
-	}
+    if (this.props.authData && this.props.authData.authToken) {
+      this.connectToSocket();
+    }
+  }
+  componentDidUpdate(prevProps) {
+    if (!prevProps.authData.authToken && this.props.authData.authToken) {
+      this.connectToSocket();
+    }
+  }
   render() {
     return (
       <MuiThemeProvider theme={createMuiTheme(themes.whatsApp)}>
         <BrowserRouter>
           <Switch>
-            <Route exact path="/login" component={LoginPage} />
-            {(!this.props.authData.username || !this.props.authData.email) && (
-              <Redirect to="/login" />
-            )}
+            <Route
+              exact
+              path="/login"
+              render={() => {
+                if (this.props.authData && this.props.authData.authToken) {
+                  return <Redirect to="/" />;
+                }
+                return <LoginPage />;
+              }}
+            />
+            {(!this.props.authData.username ||
+              !this.props.authData.authToken) && <Redirect to="/login" />}
             <Route
               exact
               path="/chat/:contact"
@@ -109,12 +133,12 @@ const mapStateToProps = (state) => ({
     username: state.username,
     email: state.email,
     userId: state.userId,
-    authToken: state.authToken
+    authToken: state.authToken,
   },
 });
 
-const mapDispatchToProps = dispatch => ({
-  setAuthData: (authData) => dispatch({type: 'SET_AUTH_DATA', authData})
-})
+const mapDispatchToProps = (dispatch) => ({
+  setAuthData: (authData) => dispatch({ type: "SET_AUTH_DATA", authData }),
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

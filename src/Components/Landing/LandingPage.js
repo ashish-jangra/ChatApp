@@ -66,7 +66,7 @@ const styles = (theme) => {
 			right: '12px',
     },
     componentContainer: {
-      minHeight: '100vh'
+      minHeight: '100%'
     }
 	};
 };
@@ -134,6 +134,7 @@ class LandingPage extends Component {
               activeTab: newIndex
             })
 					}}
+					style={{height: '100%'}}
 				>
 					<Box className={classes.componentContainer}>
 						<Home {...remProps}  />
@@ -145,7 +146,7 @@ class LandingPage extends Component {
 						<Calls {...remProps} />
 					</Box>
 				</SwipeableViews>
-				<Box style={{ height: '60px' }} />
+				<Box style={{ minHeight: '60px' }} />
 				<Fab color="secondary" size="medium" className={classes.fab} onClick={this.handleOpenContacts}>
 					<ChatIcon fontSize="small" />
 				</Fab>

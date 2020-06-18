@@ -10,6 +10,7 @@ import {
   Box,
 	Badge,
 } from "@material-ui/core";
+import {connect} from 'react-redux';
 import {
   Person as PersonIcon,
   Chat as ChatIcon,
@@ -53,7 +54,6 @@ class Home extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      contacts: [],
       presentableContacts: [],
     };
   }
@@ -84,7 +84,12 @@ class Home extends Component {
   handleReceiveMessage = (data) => {
     // currently assuming personal maessage received
     console.log("[home]received a message, display on UI");
-    let { contacts, presentableContacts } = this.state;
+    let {from, ...msg} = data;
+    this.props.addChat({
+      contact: from,
+      msg
+    })
+    let { presentableContacts } = this.state, {contacts} = this.props;
     let contact = presentableContacts.find((ct) => ct.email === data.from);
     if (!contact) {
       contact = contacts.find((ct) => ct.email === data.from);
@@ -93,17 +98,18 @@ class Home extends Component {
         contact.chats.push(data);
         presentableContacts.push(contact);
         presentableContacts.sort(this.sortByRecentMsgs);
+        this.props.setContacts(contacts);
         this.setState({
-          contacts,
           presentableContacts,
         });
       } else {
-        this.getContactsReady();
+        return;
       }
     } else {
       contact.unreadMessages = (contact.unreadMessages || 0) + 1;
       contact.chats.push(data);
       presentableContacts.sort(this.sortByRecentMsgs);
+      this.props.setContacts(contacts);
       this.setState({
         presentableContacts,
       });
@@ -114,16 +120,27 @@ class Home extends Component {
     if (!socket) return;
     socket.on("receiveMessage", this.handleReceiveMessage);
   };
+  getPresentableContacts = contacts => {
+    let presentableContacts = contacts.filter(
+      (contact) => contact.chats.length > 0
+    );
+    presentableContacts.sort(this.sortByRecentMsgs);
+    return presentableContacts;
+  }
   getContactsReady = () => {
+    if(this.props.contacts.length){
+      let presentableContacts = this.getPresentableContacts(this.props.contacts);
+      this.setState({
+        presentableContacts
+      });
+      return;
+    }
     getContacts()
       .then((contacts) => {
         // console.log("[home] received contacts", contacts)
-        let presentableContacts = contacts.filter(
-          (contact) => contact.chats.length > 0
-        );
-        presentableContacts.sort(this.sortByRecentMsgs);
+        this.props.setContacts(contacts);
+        let presentableContacts = this.getPresentableContacts(contacts);
         this.setState({
-          contacts: contacts || [],
           presentableContacts,
         });
       })
@@ -173,7 +190,7 @@ class Home extends Component {
 										<Grid className={`${classes.overflowText} ${contact.unreadMessages && classes.unreadMsg}`} item xs={contact.unreadMessages ? 11 : 12}>
                   		{contact.chats[contact.chats.length - 1].msg}
 										</Grid>
-										{contact.unreadMessages && (
+										{contact.unreadMessages > 0 && (
 											<Grid item xs={1}>
 												<Badge badgeContent={contact.unreadMessages} color="secondary" />
 											</Grid>
@@ -190,4 +207,14 @@ class Home extends Component {
   }
 }
 
-export default withStyles(styles)(Home);
+const mapStateToProps = state => ({
+  contacts: state.contacts
+})
+
+const mapDispatchToProps = dispatch => ({
+  setContacts: (contacts)=> dispatch({type: 'SET_CONTACTS', contacts}),
+  addChat: (payload) => dispatch({type: 'ADD_CHAT', ...payload}),
+  setUnreadMsg: (contact, count) => dispatch({type: 'SET_UNREAD_MESSAGE', contact, count})
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Home));
