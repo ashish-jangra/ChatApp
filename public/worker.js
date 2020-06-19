@@ -27,6 +27,10 @@ self.addEventListener('fetch', event => {
         return fetch(event.request);
       }
     )
+    .catch(err => {
+      console.log("worker.js fetch error", err);
+      return fetch(event.request);
+    })
   );
 });
 

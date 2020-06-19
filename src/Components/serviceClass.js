@@ -84,3 +84,24 @@ export const addContact = (contact) => {
       throw err;
     });
 };
+
+export const sendImage = (imageData)=> {
+  console.log("[SC] imagedata", imageData.getAll('imageData'))
+  return fetch(CONFIG.sendImageURL,{
+    credentials: 'include',
+    method: 'POST',
+    // headers: {
+    //   "Content-Type": "multipart/form-data",
+    // },
+    body: imageData
+  })
+  .then(response => response.json())
+  .then(res => {
+    if(res.err)
+      throw new Error(res.message)
+    return res;
+  })
+  .catch(err => {
+    throw err;
+  })
+}
