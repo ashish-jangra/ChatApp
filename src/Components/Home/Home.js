@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import {
   MenuList,
   MenuItem,
@@ -15,6 +15,7 @@ import {
   Person as PersonIcon,
   Chat as ChatIcon,
   Group as GroupIcon,
+  Image,
 } from "@material-ui/icons";
 import { withStyles } from "@material-ui/core/styles";
 import { getContacts } from "../serviceClass";
@@ -22,6 +23,7 @@ import {getHomeTimeString} from '../Utility/CommonFunctions';
 
 const styles = (theme) => ({
   overflowText: {
+    display: "flex",
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -188,7 +190,7 @@ class Home extends Component {
                 secondary={
 									(<Grid container>
 										<Grid className={`${classes.overflowText} ${contact.unreadMessages && classes.unreadMsg}`} item xs={contact.unreadMessages ? 11 : 12}>
-                  		{contact.chats[contact.chats.length - 1].msg}
+                  		{contact.chats[contact.chats.length - 1].type === 'img' ? <Fragment> <Image fontSize="small" />&nbsp;Photo</Fragment> : contact.chats[contact.chats.length - 1].msg}
 										</Grid>
 										{contact.unreadMessages > 0 && (
 											<Grid item xs={1}>

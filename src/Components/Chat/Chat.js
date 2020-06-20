@@ -7,8 +7,18 @@ import {
   InputBase,
   InputAdornment,
   IconButton,
+  Zoom,
+  Card,
+  Menu,
+  Icon,
+  ClickAwayListener,
 } from "@material-ui/core";
-import { Send as SendIcon, AttachFile } from "@material-ui/icons";
+import {
+  Send as SendIcon,
+  AttachFile,
+  InsertDriveFile,
+  InsertPhoto,
+} from "@material-ui/icons";
 import { withStyles } from "@material-ui/core/styles";
 import ChatHeader from "../Header/ChatHeader";
 import { getChatTimeString } from "../Utility/CommonFunctions";
@@ -51,6 +61,19 @@ const styles = (theme) => ({
     right: "12px",
     color: "gray",
   },
+  multimediaFeedback: {
+    position: "absolute",
+    bottom: "4px",
+    right: "4px",
+    height: "5em",
+    width: "50%",
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    color: "white",
+    background:
+      "radial-gradient(at bottom right, rgba(0,0,0,0.5), transparent,transparent)",
+  },
   inputContainer: {
     position: "sticky",
     padding: "6px 0",
@@ -69,6 +92,7 @@ const styles = (theme) => ({
     backgroundColor: "white",
     borderRadius: "24px",
     paddingLeft: "20px",
+    paddingRight: "2px",
     display: "flex",
     alignItems: "center",
     margin: "0 6px",
@@ -104,10 +128,12 @@ const styles = (theme) => ({
     padding: "4px",
     paddingBottom: "0px",
     borderRadius: "8px",
+    overflow: "hidden",
   },
   chatImage: {
-    maxHeight: "250px",
-    maxWidth: "250px",
+    height: "250px",
+    width: "250px",
+    objectFit: "cover",
     borderRadius: "4px",
   },
   attachFileButton: {
@@ -115,6 +141,31 @@ const styles = (theme) => ({
   },
   attachFileLabel: {
     display: "flex",
+    transform: "rotate(-45deg)",
+  },
+  imageInputButton: {
+    background: `linear-gradient(-180deg, #042573 50%, #6433ff 50%)`,
+    color: theme.palette.primary.contrastText,
+    maxHeight: "48px",
+    marginRight: "8px",
+  },
+  fileInputButton: {
+    background: `linear-gradient(-180deg, red 50%, #ff5c33 50%)`,
+    color: theme.palette.primary.contrastText,
+    maxHeight: "48px",
+    marginRight: "8px",
+  },
+  fileInputLabel: {
+    display: "flex",
+  },
+  fileInputMenu: {
+    position: "sticky",
+    bottom: 0,
+    left: 0,
+    display: "flex",
+    padding: "0 8px",
+    marginTop: "8px",
+    minHeight: "54px",
   },
 });
 
@@ -140,6 +191,7 @@ class Chat extends Component {
     }
     this.state = {
       contact,
+      activateFileInput: false,
     };
     window.scrollTo(0, document.body.scrollHeight);
     this.inputRef = React.createRef();
@@ -189,7 +241,7 @@ class Chat extends Component {
     this.lastMsgRef.current &&
       this.lastMsgRef.current.scrollIntoView({
         behavior: "smooth",
-        block: "end",
+        block: "center",
       });
   };
   componentDidUpdate(prevProps, prevState) {
@@ -227,7 +279,7 @@ class Chat extends Component {
     }
   };
   componentDidMount() {
-    this.scrollToBottom()
+    setTimeout(this.scrollToBottom, 500);
     const { socket } = this.props;
     this.props.clearUnreadMsg(this.state.contact.email);
     socket.emit("clearUnreadMessages", { userId: this.state.contact.userId });
@@ -243,40 +295,52 @@ class Chat extends Component {
       this.handleReceiveMessage
     );
   }
-  handleImageInputChange = (e) => {
-    if (e.target.files.length > 0) {
-      let imageObject = e.target.files[0];
-      console.log("image input change", imageObject);
-      let localURL = URL.createObjectURL(imageObject);
-      let { contact } = this.state;
-      contact.chats.push({
+  fastRandId = () => new Date().getTime() + Math.random().toString(36).substring(2, 16) + Math.random().toString(36).substring(2, 16)
+  sendImage = async (imageFile) => {
+    let localURL = URL.createObjectURL(imageFile);
+    this.setState((prevState) => {
+      prevState.contact.chats.push({
         type: "img",
         from: this.props.authData.email,
         msg: localURL,
+        _id: this.fastRandId(),
+        uploaded: false
       });
-      this.setState({
-        contact,
+      return {
+        activateFileInput: false,
+        contact: prevState.contact,
+      };
+    });
+    let imageData = new FormData();
+    imageData.append("imageData", imageFile, imageFile.name);
+    console.log("imagedata", imageData.get("imageData"));
+    try {
+      let res = await sendImage(imageData);
+      if (!res.filename) throw new Error("no filename returned");
+      this.props.socket.emit("sendPersonalMessage", {
+        to: this.state.contact.userId,
+        msg: hostURL + "/media/getImage?filename=" + res.filename,
+        type: "img",
       });
-      let imageData = new FormData();
-      imageData.append("imageData", imageObject, imageObject.name);
-      console.log("imagedata", imageData.get("imageData"));
-      sendImage(imageData)
-        .then((res) => {
-          console.log("[Chat] sendimage response", res);
-          if (!res.filename) throw new Error("no filename returned");
-          this.props.socket.emit("sendPersonalMessage", {
-            to: this.state.contact.userId,
-            msg: hostURL + "/media/getImage?filename=" + res.filename,
-            type: "img",
-          });
-          this.scrollToBottom()
-        })
-        .catch((err) => {
-          console.log("[Chat] sendimage error", err);
-          this.scrollToBottom()
-        });
+    } catch (err) {
+      console.log("[Chat] sendIMage err", err.message);
     }
   };
+  handleImageInputChange = async (e) => {
+    let imageInput = e.target;
+    console.log("forWach", imageInput.files.forEach);
+    if (imageInput.files.length > 0) {
+      for (let i = 0; i < imageInput.files.length; i++) {
+        this.sendImage(imageInput.files[i])
+      }
+    }
+  };
+  toggleFileInput = () =>
+    this.setState((prevState) => ({
+      activateFileInput: !Boolean(prevState.activateFileInput),
+    }));
+  closeFileInput = () => this.setState({ activateFileInput: false });
+  openFileInput = () => this.setState({ activateFileInput: true });
   render() {
     const { classes } = this.props;
     let spaces = <span style={{ marginLeft: "4em" }} />;
@@ -333,13 +397,36 @@ class Chat extends Component {
                   )}
                   <Typography
                     variant="caption"
-                    className={classes.chatFeedback}
+                    className={
+                      chat.type === "img"
+                        ? classes.multimediaFeedback
+                        : classes.chatFeedback
+                    }
                   >
                     {getChatTimeString(chat.sent)}
                   </Typography>
                 </Box>
               </Box>
             ))}
+          {this.state.activateFileInput && (
+            <Zoom in={this.state.activateFileInput}>
+              <Box className={classes.fileInputMenu}>
+                <IconButton className={classes.imageInputButton}>
+                  <label className={classes.fileInputLabel} htmlFor="fileInput">
+                    <InsertDriveFile />
+                  </label>
+                </IconButton>
+                <IconButton className={classes.fileInputButton}>
+                  <label
+                    className={classes.fileInputLabel}
+                    htmlFor="imageInput"
+                  >
+                    <InsertPhoto />
+                  </label>
+                </IconButton>
+              </Box>
+            </Zoom>
+          )}
         </Container>
         <Box className={classes.inputContainer}>
           <Box className={classes.textFieldContainer}>
@@ -358,17 +445,26 @@ class Chat extends Component {
             <IconButton
               className={classes.attachFileButton}
               size="medium"
-              onClick={this.handleImageInput}
+              onClick={this.toggleFileInput}
             >
-              <label className={classes.attachFileLabel} htmlFor="imageInput">
-                <AttachFile fontSize="small" />
-              </label>
+              <AttachFile
+                className={classes.attachFileLabel}
+                fontSize="small"
+              />
             </IconButton>
             <input
               onChange={this.handleImageInputChange}
               type="file"
+              multiple
               accept="image/*"
               id="imageInput"
+              style={{ display: "none" }}
+            />
+            <input
+              onChange={this.handleFileInputChange}
+              type="file"
+              accept="*"
+              id="fileInput"
               style={{ display: "none" }}
             />
           </Box>
