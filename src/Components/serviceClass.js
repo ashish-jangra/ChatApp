@@ -1,7 +1,6 @@
 import CONFIG from "./config";
 
 export const getAuth = (authData) => {
-  console.log("send auth data", authData);
   return fetch(CONFIG.authURL, {
     method: "POST",
     headers: {
@@ -12,7 +11,6 @@ export const getAuth = (authData) => {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log("[SC] getauth data", data);
       return data;
     })
     .catch((err) => {
@@ -57,7 +55,6 @@ export const getContactsList = () => {
     .then((data) => {
       data = data.contacts;
       data.sort(sortByName);
-      console.log("[SC] contactslist", data);
       return data;
     })
     .catch((err) => {
@@ -86,7 +83,6 @@ export const addContact = (contact) => {
 };
 
 export const sendImage = (imageData)=> {
-  console.log("[SC] imagedata", imageData.getAll('imageData'))
   return fetch(CONFIG.sendImageURL,{
     credentials: 'include',
     method: 'POST',
@@ -104,4 +100,10 @@ export const sendImage = (imageData)=> {
   .catch(err => {
     throw err;
   })
+}
+
+export const getDateObject = input => {
+  if(input instanceof Date)
+    return input;
+  return new Date(input)
 }

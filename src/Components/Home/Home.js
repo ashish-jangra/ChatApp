@@ -18,7 +18,7 @@ import {
   Image,
 } from "@material-ui/icons";
 import { withStyles } from "@material-ui/core/styles";
-import { getContacts } from "../serviceClass";
+import { getContacts, getDateObject } from "../serviceClass";
 import {getHomeTimeString} from '../Utility/CommonFunctions';
 
 const styles = (theme) => ({
@@ -49,7 +49,20 @@ const styles = (theme) => ({
 	},
 	unreadMsg: {
 		color: '#000'
-	}
+  },
+  gridContainer: {
+    width: "100%",
+    display: "flex"
+  },
+  item1: {
+    width: "8.33%"
+  },
+  item11: {
+    width: "91.66%"
+  },
+  item12: {
+    width: "100%"
+  }
 });
 
 class Home extends Component {
@@ -73,7 +86,7 @@ class Home extends Component {
     if (lastMsg1.sent || lastMsg2.sent) {
       if (!lastMsg1.sent) return 1;
       if (!lastMsg2.sent) return -1;
-      return lastMsg1.sent > lastMsg2.sent
+      return getDateObject(lastMsg1.sent).getTime() > getDateObject(lastMsg2.sent).getTime()
         ? -1
         : lastMsg1.sent === lastMsg2.sent
         ? user1.name < user2.name
@@ -86,36 +99,17 @@ class Home extends Component {
   handleReceiveMessage = (data) => {
     // currently assuming personal maessage received
     console.log("[home]received a message, display on UI");
-    let {from, ...msg} = data;
+    let {from} = data;
     this.props.addChat({
       contact: from,
-      msg
+      incUnread: true,
+      msg: data
     })
-    let { presentableContacts } = this.state, {contacts} = this.props;
-    let contact = presentableContacts.find((ct) => ct.email === data.from);
-    if (!contact) {
-      contact = contacts.find((ct) => ct.email === data.from);
-      if (contact) {
-        contact.unreadMessages = (contact.unreadMessages || 0) + 1;
-        contact.chats.push(data);
-        presentableContacts.push(contact);
-        presentableContacts.sort(this.sortByRecentMsgs);
-        this.props.setContacts(contacts);
-        this.setState({
-          presentableContacts,
-        });
-      } else {
-        return;
-      }
-    } else {
-      contact.unreadMessages = (contact.unreadMessages || 0) + 1;
-      contact.chats.push(data);
-      presentableContacts.sort(this.sortByRecentMsgs);
-      this.props.setContacts(contacts);
-      this.setState({
-        presentableContacts,
-      });
-    }
+    let presentableContacts = this.getPresentableContacts(this.props.contacts);
+    this.setState({
+      presentableContacts,
+      updated: true
+    })
   };
   addSocketEventListeners = () => {
     let { socket } = this.props;
@@ -155,6 +149,7 @@ class Home extends Component {
     this.getContactsReady();
   }
   componentWillUnmount() {
+    console.log("unmounting home.js")
     if (this.props.socket)
       this.props.socket.removeEventListener(
         "receiveMessage",
@@ -188,16 +183,16 @@ class Home extends Component {
 									</Grid>
 								</Grid>)}
                 secondary={
-									(<Grid container>
-										<Grid className={`${classes.overflowText} ${contact.unreadMessages && classes.unreadMsg}`} item xs={contact.unreadMessages ? 11 : 12}>
+									(<span className={classes.gridContainer}>
+										<span className={`${classes.overflowText} ${contact.unreadMessages && classes.unreadMsg} ${contact.unreadMessages ? classes.item11 : classes.item12}`}>
                   		{contact.chats[contact.chats.length - 1].type === 'img' ? <Fragment> <Image fontSize="small" />&nbsp;Photo</Fragment> : contact.chats[contact.chats.length - 1].msg}
-										</Grid>
+										</span>
 										{contact.unreadMessages > 0 && (
-											<Grid item xs={1}>
+											<span className={classes.item1}>
 												<Badge badgeContent={contact.unreadMessages} color="secondary" />
-											</Grid>
+											</span>
 										)}
-									</Grid>)
+									</span>)
                 }
               />
             </MenuItem>

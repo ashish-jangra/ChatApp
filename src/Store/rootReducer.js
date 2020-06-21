@@ -18,9 +18,11 @@ const rootReducer = (state = initialState, action) => {
   if(action.type === 'ADD_CHAT'){
     let contact = state.contacts.find(ct => ct.email === action.contact);
     if(!contact){
-      return;
+      return state;
     }
     else{
+      if(action.incUnread)
+        contact.unreadMessages = (contact.unreadMessages || 0) + 1
       contact.chats.push(action.msg);
       return {...state};
     }
@@ -28,10 +30,20 @@ const rootReducer = (state = initialState, action) => {
   if(action.type === 'SET_UNREAD_MESSAGE'){
     let contact = state.contacts.find(ct => ct.email === action.contact);
     if(!contact){
-      return;
+      return state;
     }
     else{
       contact.unreadMessages = action.count;
+      return {...state};
+    }
+  }
+  if(action.type === 'INC_UNREAD_MESSAGE'){
+    let contact = state.contacts.find(ct => ct.email === action.contact);
+    if(!contact){
+      return state;
+    }
+    else{
+      contact.unreadMessages = (contact.unreadMessages || 0) + 1;
       return {...state};
     }
   }

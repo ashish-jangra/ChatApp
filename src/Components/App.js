@@ -17,6 +17,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     themes.whatsApp.palette.type = "light";
+    console.log("theme", createMuiTheme(themes.whatsApp))
     let cookies = this.parseCookie(document.cookie);
     console.log("[App] cookies", cookies);
     if (cookies.userId) {
@@ -60,7 +61,6 @@ class App extends Component {
     return cookieObj;
   };
   connectToSocket = () => {
-    console.log("send conn authData", this.props.authData);
     this.setState({
       socket: io(hostURL, {
         query: "authData=" + JSON.stringify(this.props.authData),
@@ -86,11 +86,11 @@ class App extends Component {
             <Route
               exact
               path="/login"
-              render={() => {
+              render={(props) => {
                 if (this.props.authData && this.props.authData.authToken) {
                   return <Redirect to="/" />;
                 }
-                return <LoginPage />;
+                return <LoginPage {...props} />;
               }}
             />
             {(!this.props.authData.username ||

@@ -12,10 +12,14 @@ const themes = {
 				contrastText: '#fff'
 			},
 			text: {
-				secondary: 'rgba(0,0,0,0.54)'
+				// secondary: 'rgba(0,0,0,0.54)'
+			},
+			background: {
+				lightPaper: 'lightgray'
 			},
 			secondary: {
 				main: '#25D366',
+				light: '#cfe9ba',
 				contrastText: '#fff'
 			},
 			type: 'light',

@@ -6,7 +6,6 @@ import { ArrowBack as ArrowBackIcon, Person as PersonIcon, MoreVert, Videocam, C
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = (theme) => {
-	console.log(theme);
 	return {
 		avatarImage: {
 			display: 'flex',

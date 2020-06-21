@@ -11,7 +11,6 @@ import Status from '../Home/Status';
 import Calls from '../Home/Calls';
 
 const styles = (theme) => {
-	console.log(theme);
 	return {
 		appbar: {
 			textAlign: 'center',

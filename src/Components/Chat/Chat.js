@@ -32,6 +32,7 @@ const styles = (theme) => ({
     overflow: "hidden auto",
     height: "100%",
     paddingTop: "16px",
+    paddingBottom: "8px",
     background: "lightgray",
     backgroundSize: "contain",
   },
@@ -70,6 +71,7 @@ const styles = (theme) => ({
     display: "flex",
     alignItems: "flex-end",
     justifyContent: "flex-end",
+    paddingRight: "6px",
     color: "white",
     background:
       "radial-gradient(at bottom right, rgba(0,0,0,0.5), transparent,transparent)",
@@ -206,6 +208,11 @@ class Chat extends Component {
   handleMessageSend = () => {
     let message = this.state.messageText.trim();
     let contact = JSON.parse(JSON.stringify(this.state.contact));
+    let newMsg = {
+      from: this.props.authData.email,
+      msg: message,
+      sent: new Date()
+    }
     if (contact.type === "group") {
       this.props.socket.emit("sendMessageInGroup", {
         groupName: this.props.match.params.contact,
@@ -215,27 +222,22 @@ class Chat extends Component {
       this.props.socket.emit("sendPersonalMessage", {
         to: this.state.contact.userId,
         msg: message,
+      }, ack => {
+        console.log("received ack", ack)
+        newMsg._id = ack._id
       });
     }
-    if (contact.chats && Number.isInteger(contact.chats.length))
-      contact.chats.push({
-        from: this.props.authData.email,
-        msg: message,
-        // time: `${new Date().getHours()}:${new Date().getMinutes()}`
-        sent: new Date(),
-      });
-    else
-      contact.chats = [
-        {
-          from: this.props.authData.email,
-          msg: this.state.messageText,
-          // time: `${new Date().getHours()}:${new Date().getMinutes()}`
-          sent: new Date(),
-        },
-      ];
+    this.props.addChat({
+      contact: this.state.contact.email,
+      msg: newMsg
+    })
+    // if (contact.chats && Number.isInteger(contact.chats.length))
+    //   contact.chats.push(newMsg);
+    // else
+    //   contact.chats = [ newMsg ];
     // focus again on msg input
     this.inputRef.current && this.inputRef.current.focus();
-    this.setState({ messageText: "", contact });
+    this.setState({ messageText: "" });
   };
   scrollToBottom = () => {
     this.lastMsgRef.current &&
@@ -258,23 +260,26 @@ class Chat extends Component {
     }
   };
   handleReceiveMessage = (data) => {
-    console.log("[Chat] handlereceivemsg");
+    console.log("[Chat] handlereceivemsg", data);
     let contact = this.state.contact;
-    let { from, ...msg } = data;
+    let { from } = data;
     this.props.addChat({
       contact: from,
-      msg,
+      msg: data,
+      incUnread: from !== this.state.contact.email
     });
     if (from === contact.email) {
       this.props.socket.emit("clearUnreadMessages", {
         userId: this.state.contact.userId,
+      }, ack => {
+        console.log(ack)
       });
-      contact.chats.push({
-        from: data.from,
-        msg: data.msg,
-      });
+      // contact.chats.push({
+      //   from: data.from,
+      //   msg: data.msg,
+      // });
       this.setState({
-        contact,
+        update: true,
       });
     }
   };
@@ -282,7 +287,7 @@ class Chat extends Component {
     setTimeout(this.scrollToBottom, 500);
     const { socket } = this.props;
     this.props.clearUnreadMsg(this.state.contact.email);
-    socket.emit("clearUnreadMessages", { userId: this.state.contact.userId });
+    socket.emit("clearUnreadMessages", { userId: this.state.contact.userId }, ack => console.log(ack));
     // socket.emit('joinRoom', {
     // 	groupName: this.props.match.params.contact
     // })
@@ -295,25 +300,25 @@ class Chat extends Component {
       this.handleReceiveMessage
     );
   }
-  fastRandId = () => new Date().getTime() + Math.random().toString(36).substring(2, 16) + Math.random().toString(36).substring(2, 16)
+  fastRandId = () => new Date().getTime().toString(36) + Math.random().toString(36).substring(2, 16) + Math.random().toString(36).substring(2, 16)
   sendImage = async (imageFile) => {
     let localURL = URL.createObjectURL(imageFile);
-    this.setState((prevState) => {
-      prevState.contact.chats.push({
-        type: "img",
-        from: this.props.authData.email,
-        msg: localURL,
-        _id: this.fastRandId(),
-        uploaded: false
-      });
-      return {
-        activateFileInput: false,
-        contact: prevState.contact,
-      };
-    });
+    let newMsg = {
+      type: "img",
+      from: this.props.authData.email,
+      msg: localURL,
+      _id: this.fastRandId(),
+      uploaded: false
+    };
+    this.props.addChat({
+      contact: this.state.contact.email,
+      msg: newMsg
+    })
+    this.setState({
+      activateFileInput: false
+    })
     let imageData = new FormData();
     imageData.append("imageData", imageFile, imageFile.name);
-    console.log("imagedata", imageData.get("imageData"));
     try {
       let res = await sendImage(imageData);
       if (!res.filename) throw new Error("no filename returned");
@@ -321,6 +326,8 @@ class Chat extends Component {
         to: this.state.contact.userId,
         msg: hostURL + "/media/getImage?filename=" + res.filename,
         type: "img",
+      }, ack => {
+        console.log("received ack", ack)
       });
     } catch (err) {
       console.log("[Chat] sendIMage err", err.message);
@@ -328,7 +335,6 @@ class Chat extends Component {
   };
   handleImageInputChange = async (e) => {
     let imageInput = e.target;
-    console.log("forWach", imageInput.files.forEach);
     if (imageInput.files.length > 0) {
       for (let i = 0; i < imageInput.files.length; i++) {
         this.sendImage(imageInput.files[i])
@@ -438,7 +444,7 @@ class Chat extends Component {
               onKeyUp={this.handleKeyPress}
               value={this.state.messageText}
               onChange={this.handleMessageTextChange}
-              placeholder="Type message to send..."
+              placeholder="Type message..."
               classes={{ root: classes.textFieldRoot }}
               type="text"
             />
