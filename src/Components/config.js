@@ -7,5 +7,8 @@ export default {
   getContactsURL: hostURL+'/contacts/getContacts',
   getContactsListURL: hostURL+'/contacts/getContactsList',
   addContactURL: hostURL+'/contacts/addContact',
-  sendImageURL: hostURL+'/media/postImage'
+  sendImageURL: hostURL+'/media/postImage',
+  updateProfilePicURL: hostURL+'/media/updateProfilePic',
+  getImage: filename => hostURL + "/media/getImage?filename="+filename,
+  getProfilePic: userId => hostURL+'/media/getProfilePic?userId='+userId
 }

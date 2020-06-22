@@ -102,6 +102,23 @@ export const sendImage = (imageData)=> {
   })
 }
 
+export const updateProfilePic = formdata => {
+  return fetch(CONFIG.updateProfilePicURL, {
+    method: 'POST',
+    credentials: 'include',
+    body: formdata
+  })
+  .then(response => response.json())
+  .then(res => {
+    if(!res.filename)
+      throw new Error('no filename returned')
+    return res;
+  })
+  .catch(err => {
+    throw err;
+  })
+}
+
 export const getDateObject = input => {
   if(input instanceof Date)
     return input;

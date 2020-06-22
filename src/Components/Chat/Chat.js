@@ -23,7 +23,7 @@ import { withStyles } from "@material-ui/core/styles";
 import ChatHeader from "../Header/ChatHeader";
 import { getChatTimeString } from "../Utility/CommonFunctions";
 import { sendImage } from "../serviceClass";
-import { hostURL } from "../config";
+import CONFIG from "../config";
 
 const styles = (theme) => ({
   root: {
@@ -324,7 +324,7 @@ class Chat extends Component {
       if (!res.filename) throw new Error("no filename returned");
       this.props.socket.emit("sendPersonalMessage", {
         to: this.state.contact.userId,
-        msg: hostURL + "/media/getImage?filename=" + res.filename,
+        msg: CONFIG.getImage(res.filename),
         type: "img",
       }, ack => {
         console.log("received ack", ack)

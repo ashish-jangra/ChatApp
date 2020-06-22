@@ -83,14 +83,14 @@ class ContactHeader extends Component {
 						<ArrowBackIcon />
 					</IconButton>
 					<Box className={classes.headingContainer}>
-            <Typography
-              variant="body1"
+            {this.props.headerText.primary && (<Typography
+              variant={this.props.headerText.primary && this.props.headerText.secondary ? "body1" : "h6"}
             >
               {this.props.headerText.primary}
-            </Typography>
-            <Typography variant="body2">
+            </Typography>)}
+            {this.props.headerText.secondary && (<Typography variant="body2">
               {this.props.headerText.secondary}
-            </Typography>
+            </Typography>)}
           </Box>
 				</Toolbar>
 			</AppBar>

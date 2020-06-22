@@ -7,7 +7,8 @@ import Contacts from "./Contacts/Contacts";
 import LandingPage from "./Landing/LandingPage";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import ProfilePage from "./ProfilePage/ProfilePage";
-import AddContact from "../Components/Contacts/AddContact";
+import AddContact from "./Contacts/AddContact";
+import UpdateProfile from './Home/UpdateProfile';
 import LoginPage from "../Components/Landing/LoginPage";
 import { connect } from "react-redux";
 import { getAuthVerified } from "./serviceClass";
@@ -115,6 +116,7 @@ class App extends Component {
               path="/addContact"
               render={(props) => <AddContact {...props} />}
             />
+            <Route exact path="/updateProfile" component={UpdateProfile} />
             <Route
               path="/"
               render={(props) => (
