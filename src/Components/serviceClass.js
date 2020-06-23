@@ -124,3 +124,16 @@ export const getDateObject = input => {
     return input;
   return new Date(input)
 }
+
+export const getContactInfo = userId => {
+  return fetch(CONFIG.contactInfoURL+`?userId=${userId}`, {credentials: 'include'})
+    .then(response => response.json())
+    .then(data => {
+      if(data.error)
+        throw new Error(data.message)
+      return data;
+    })
+    .catch(err => {
+      throw err;
+    })
+}

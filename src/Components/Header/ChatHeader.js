@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Typography, IconButton } from '@material-ui/core';
+import { Box, AppBar, Toolbar, Button, IconButton } from '@material-ui/core';
 import {
 	ArrowBack as ArrowBackIcon,
 	Person as PersonIcon,
@@ -10,30 +10,22 @@ import {
 	Group as GroupIcon,
 } from '@material-ui/icons';
 import { withStyles } from '@material-ui/core/styles';
+import ImageThumbnail from '../Utility/imgThumbnail';
+import config from '../config';
 
 const styles = (theme) => {
 	return {
 		heading: {
+			display: 'inline',
 			textTransform: 'capitalize',
-			paddingLeft: '8px',
+			padding: '12px 8px',
+			borderRadius: 0,
+			color: theme.palette.primary.contrastText,
 			textAlign: 'left',
 			whiteSpace: 'nowrap',
 			overflow: 'hidden',
 			textOverflow: 'ellipsis',
 			width: '100%',
-		},
-		avatarImage: {
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			height: '40px',
-			width: '40px',
-			padding: '0 8px',
-			marginLeft: 0,
-			marginRight: '6px',
-			background: 'white',
-			color: 'gray',
-			borderRadius: '200px',
 		},
 		iconContainer: {
 			color: theme.palette.primary.contrastText,
@@ -70,6 +62,9 @@ class ChatHeader extends Component {
 	handleGoBack = () => {
 		this.props.history.goBack();
 	};
+	handleShowProfile = () => {
+		this.props.history.push('/profile/'+this.props.userId)
+	}
 	render() {
 		const { classes } = this.props;
 		return (
@@ -89,13 +84,13 @@ class ChatHeader extends Component {
 					<IconButton color="inherit" aria-label="menu" onClick={this.handleGoBack}>
 						<ArrowBackIcon />
 					</IconButton>
-					<Box className={classes.avatarImage}>{this.props.isGroup ? <GroupIcon /> : <PersonIcon />}</Box>
-					<Typography
-						variant="body1"
+					<ImageThumbnail src={config.getProfilePic(this.props.userId)+'&width=128&height=128'} height="40px" width="40px" />
+					<Button
+						onClick={this.handleShowProfile}
 						className={classes.heading}
 					>
 						{this.props.headerText}
-					</Typography>
+					</Button>
 					<IconButton className={classes.videoIcon}>
 						<Videocam />
 					</IconButton>

@@ -20,6 +20,8 @@ import {
 import { withStyles } from "@material-ui/core/styles";
 import { getContacts, getDateObject } from "../serviceClass";
 import {getHomeTimeString} from '../Utility/CommonFunctions';
+import ImageThumbnail from '../Utility/imgThumbnail';
+import config from "../config";
 
 const styles = (theme) => ({
   overflowText: {
@@ -164,9 +166,7 @@ class Home extends Component {
           <Box key={index}>
             <MenuItem onClick={() => this.handleSelectContact(contact)}>
               <ListItemAvatar>
-                <Avatar className={classes.avatar}>
-                  {contact.type === "group" ? <GroupIcon /> : <PersonIcon />}
-                </Avatar>
+                <ImageThumbnail background="lightgray" width="44px" height="44px" src={config.getProfilePic(contact.userId)+"&width=128&height=128"} />
               </ListItemAvatar>
               <ListItemText
                 classes={{

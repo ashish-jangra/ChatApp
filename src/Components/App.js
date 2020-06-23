@@ -107,8 +107,7 @@ class App extends Component {
               render={(props) => <Contacts {...props} />}
             />
             <Route
-              exact
-              path="/profile"
+              path="/profile/:userId"
               render={(props) => <ProfilePage {...props} />}
             />
             <Route

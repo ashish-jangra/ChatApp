@@ -1,6 +1,6 @@
 var CACHE_NAME = 'chat-app';
 var urlsToCache = [
-  '/'
+  '/chat'
 ];
 
 // Install a service worker

@@ -4,6 +4,8 @@ import { Person as PersonIcon, GroupAdd as GroupAddIcon, PersonAdd as PersonAddI
 import { withStyles } from '@material-ui/core/styles';
 import ContactHeader from '../Header/ContactHeader';
 import {getContactsList} from '../serviceClass';
+import ImageThumbnail from '../Utility/imgThumbnail';
+import config from '../config';
 
 const styles = (theme) => ({
 	overflowText: {
@@ -77,9 +79,7 @@ class Contacts extends Component {
 						return (<Box key={index}>
 							<MenuItem onClick={() => this.handleSelectContact(contact)}>
 								<ListItemAvatar>
-									<Avatar className={classes.avatar}>
-										<PersonIcon />
-									</Avatar>
+									<ImageThumbnail background="lightgray" width="40px" height="40px" src={config.getProfilePic(contact.userId)+"&width=128&height=128"} />
 								</ListItemAvatar>
 								<ListItemText
 									classes={{ primary: classes.headingText, secondary: classes.overflowText }}

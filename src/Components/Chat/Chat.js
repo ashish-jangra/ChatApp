@@ -5,13 +5,8 @@ import {
   Container,
   Typography,
   InputBase,
-  InputAdornment,
   IconButton,
   Zoom,
-  Card,
-  Menu,
-  Icon,
-  ClickAwayListener,
 } from "@material-ui/core";
 import {
   Send as SendIcon,
@@ -355,6 +350,7 @@ class Chat extends Component {
         <ChatHeader
           headerText={this.state.contact.name}
           isGroup={this.state.contact.type === "group"}
+          userId={this.state.contact.userId}
         />
         <Container
           className={classes.root}

@@ -99,6 +99,7 @@ class LandingPage extends Component {
         this.props.location.pathname
       ),
       openSettingsMenu: false,
+      menuAnchorEl: null
     };
   }
   handleGoBack = () => {
@@ -114,7 +115,12 @@ class LandingPage extends Component {
   handleOpenContacts = () => {
     this.props.history.push("/contacts");
   };
-  handleOpenSettingsMenu = () => this.setState({ openSettingsMenu: true });
+  handleOpenSettingsMenu = e => {
+    this.setState({ 
+      openSettingsMenu: true,
+      menuAnchorEl: e.currentTarget
+    });
+  }
 	handleCloseSettingsMenu = () => this.setState({ openSettingsMenu: false });
 	handleProfileUpdate = () => {
 		this.props.history.push('/updateProfile')
@@ -158,6 +164,7 @@ class LandingPage extends Component {
           </Tabs>
         </AppBar>
         <Menu
+          anchorEl={this.state.menuAnchorEl}
           classes={{ paper: classes.menuPaper }}
           open={this.state.openSettingsMenu}
           onClose={this.handleCloseSettingsMenu}

@@ -10,5 +10,6 @@ export default {
   sendImageURL: hostURL+'/media/postImage',
   updateProfilePicURL: hostURL+'/media/updateProfilePic',
   getImage: filename => hostURL + "/media/getImage?filename="+filename,
-  getProfilePic: userId => hostURL+'/media/getProfilePic?userId='+userId
+  getProfilePic: userId => hostURL+'/media/getProfilePic?userId='+userId,
+  contactInfoURL: hostURL+'/contacts/contactInfo'
 }
