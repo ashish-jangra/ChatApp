@@ -156,9 +156,9 @@ const styles = (theme) => ({
     display: "flex",
   },
   fileInputMenu: {
-    position: "sticky",
-    bottom: 0,
-    left: 0,
+    position: "fixed",
+    bottom: "60px",
+    right: "0px",
     display: "flex",
     padding: "0 8px",
     marginTop: "8px",
@@ -336,6 +336,19 @@ class Chat extends Component {
       }
     }
   };
+  sendFile = file => {
+    let fileType = file.type.slice(0, file.type.indexOf("/"));
+    let fileExtension = file.type.slice(file.type.lastIndexOf("/")+1);
+    console.log("fileType", file);
+  }
+  handleFileInputChange = e => {
+    let fileInput = e.target;
+    if(fileInput.files.length > 0){
+      for (let i = 0; i < fileInput.files.length; i++) {
+        this.sendFile(fileInput.files[i])
+      }
+    }
+  }
   toggleFileInput = () =>
     this.setState((prevState) => ({
       activateFileInput: !Boolean(prevState.activateFileInput),
@@ -465,6 +478,7 @@ class Chat extends Component {
             <input
               onChange={this.handleFileInputChange}
               type="file"
+              multiple
               accept="*"
               id="fileInput"
               style={{ display: "none" }}

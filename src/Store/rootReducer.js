@@ -1,5 +1,8 @@
 const initialState = {
-  contacts: []
+  contacts: [],
+  callData: {
+    active: false
+  }
 }
 
 const rootReducer = (state = initialState, action) => {
@@ -45,6 +48,23 @@ const rootReducer = (state = initialState, action) => {
     else{
       contact.unreadMessages = (contact.unreadMessages || 0) + 1;
       return {...state};
+    }
+  }
+  if(action.type === 'SET_CALL_DATA'){
+    return {
+      ...state,
+      callData: {
+        ...state.callData,
+        ...action.callData
+      }
+    }
+  }
+  if(action.type === 'CLEAR_CALL_DATA'){
+    return {
+      ...state,
+      callData: {
+        active: false
+      }
     }
   }
   return state;

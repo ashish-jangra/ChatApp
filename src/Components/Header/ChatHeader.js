@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {connect} from 'react-redux';
 import { withRouter } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, IconButton } from '@material-ui/core';
 import {
@@ -65,6 +66,15 @@ class ChatHeader extends Component {
 	handleShowProfile = () => {
 		this.props.history.push('/profile/'+this.props.userId)
 	}
+	makeVideoCall = () => {
+		// this.props.history.push('/call/'+this.props.userId)
+		this.props.setCallData({
+			active: true,
+			userId: this.props.userId,
+			name: this.props.headerText,
+			initiator: true
+		})
+	}
 	render() {
 		const { classes } = this.props;
 		return (
@@ -91,7 +101,7 @@ class ChatHeader extends Component {
 					>
 						{this.props.headerText}
 					</Button>
-					<IconButton className={classes.videoIcon}>
+					<IconButton onClick={this.makeVideoCall} className={classes.videoIcon}>
 						<Videocam />
 					</IconButton>
 					<IconButton className={classes.callIcon}>
@@ -106,4 +116,8 @@ class ChatHeader extends Component {
 	}
 }
 
-export default withRouter(withStyles(styles)(ChatHeader));
+const mapDispatchToProps = dispatch => ({
+	setCallData: callData => dispatch({type: 'SET_CALL_DATA', callData})
+})
+
+export default withRouter (connect(null, mapDispatchToProps) (withStyles(styles)(ChatHeader)));

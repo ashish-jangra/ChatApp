@@ -8,17 +8,23 @@ import LandingPage from "./Landing/LandingPage";
 import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import ProfilePage from "./ProfilePage/ProfilePage";
 import AddContact from "./Contacts/AddContact";
-import UpdateProfile from './Home/UpdateProfile';
+import UpdateProfile from "./Home/UpdateProfile";
 import LoginPage from "../Components/Landing/LoginPage";
 import { connect } from "react-redux";
 import { getAuthVerified } from "./serviceClass";
 import { hostURL } from "./config";
+import Call from "./Calls/Call";
+import { Dialog, Typography, Slide, Box, Card, IconButton } from "@material-ui/core";
+import { CallEnd, Phone } from "@material-ui/icons";
 
 class App extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      incomingCall: false
+    }
     themes.whatsApp.palette.type = "light";
-    console.log("theme", createMuiTheme(themes.whatsApp))
+    console.log("theme", createMuiTheme(themes.whatsApp));
     let cookies = this.parseCookie(document.cookie);
     console.log("[App] cookies", cookies);
     if (cookies.userId) {
@@ -61,12 +67,29 @@ class App extends Component {
     });
     return cookieObj;
   };
+  addEventListeners = (socket) => {
+    socket.on('callInvitation', (callData, sendAck) => {
+      this.setState({
+        incomingCall: true,
+      })
+      this.props.setCallData({
+        userId: callData.userId,
+        email: callData.email,
+        name: callData.name,
+        signalData: callData.signalData
+      })
+      this.sendAck = sendAck;
+    })
+  }
   connectToSocket = () => {
+    let socket = io(hostURL, {
+      query: "authData=" + JSON.stringify(this.props.authData),
+    })
     this.setState({
-      socket: io(hostURL, {
-        query: "authData=" + JSON.stringify(this.props.authData),
-      }),
+      socket,
+      // incomingCall: true
     });
+    this.addEventListeners(socket);
   };
   componentDidMount() {
     // this.state.socket.emit('chat');
@@ -78,6 +101,22 @@ class App extends Component {
     if (!prevProps.authData.authToken && this.props.authData.authToken) {
       this.connectToSocket();
     }
+  }
+  acceptCall = () => {
+    this.setState({
+      incomingCall: false
+    })
+    this.props.setCallData({
+      // userId: 
+      initiator: false,
+      active: true
+    })
+  }
+  declineCall = () => {
+    this.setState({
+      incomingCall: false
+    })
+    this.sendAck(null)
   }
   render() {
     return (
@@ -116,6 +155,7 @@ class App extends Component {
               render={(props) => <AddContact {...props} />}
             />
             <Route exact path="/updateProfile" component={UpdateProfile} />
+            <Route path="/call/:userId" component={Call} />
             <Route
               path="/"
               render={(props) => (
@@ -124,6 +164,38 @@ class App extends Component {
             />
           </Switch>
         </BrowserRouter>
+        {this.props.callData.active && <Call sendAck={this.sendAck} socket={this.state.socket} />}
+        <Slide in={this.state.incomingCall} direction="down">
+          <Card
+            style={{
+              position: "fixed",
+              zIndex: "5000",
+              top: "8px",
+              left: "8px",
+              right: "8px",
+              padding: "12px",
+              borderRadius: "6px",
+              background: "#fff"
+            }}
+          >
+            <Box style={{display: "flex"}}>
+              <IconButton onClick={this.declineCall} style={{background: "red", color: "white"}}>
+                <CallEnd fontSize="small" />
+              </IconButton>
+              <Box style={{display: "flex", flexDirection: "column", width: "100%"}}>
+                <Typography variant="body1" style={{textAlign: "center", width: "100%"}}>
+                  {this.props.callData.name}
+                </Typography>
+                <Typography variant="body2" style={{textAlign: "center", width: "100%"}}>
+                  {this.props.callData.email}
+                </Typography>
+              </Box>
+              <IconButton onClick={this.acceptCall} style={{background: "green", color: "white"}}>
+                <Phone fontSize="small" />
+              </IconButton>
+            </Box>
+          </Card>
+        </Slide>
       </MuiThemeProvider>
     );
   }
@@ -136,10 +208,17 @@ const mapStateToProps = (state) => ({
     userId: state.userId,
     authToken: state.authToken,
   },
+  callData: {
+    userId: state.callData.userId,
+    name: state.callData.name,
+    email: state.callData.email,
+    active: state.callData.active,
+  },
 });
 
 const mapDispatchToProps = (dispatch) => ({
   setAuthData: (authData) => dispatch({ type: "SET_AUTH_DATA", authData }),
+  setCallData: (callData) => dispatch({ type: "SET_CALL_DATA", callData }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

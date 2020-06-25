@@ -16,10 +16,11 @@
     "react-scripts": "3.4.1",
     "react-swipeable-views": "^0.13.3",
     "redux": "^4.0.5",
+    "simple-peer": "^9.7.2",
     "socket.io-client": "^2.3.0"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "HTTPS=true react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
