@@ -6,6 +6,7 @@ import { Paper, Box, Button, Fab, List, ListItem, ListItemIcon, ListItemText, Di
 import { CameraAlt, Person, Info, Email, AccountCircle } from "@material-ui/icons";
 import { updateProfilePic } from "../serviceClass";
 import config from "../config";
+import ImgThumbnail from '../Utility/imgThumbnail';
 
 const styles = (theme) => ({
   root: {
@@ -139,7 +140,7 @@ class UpdateProfile extends Component {
         <Paper square className={classes.root}>
           <Box className={classes.imageContainer}>
             <Box className={classes.image}>
-              <img onError={this.handleImageError} src={config.getProfilePic(this.props.userId)} className={classes.profileImage} />
+              <ImgThumbnail background="lightgray" height="100%" fontSize="3.5rem" src={config.getProfilePic(this.props.userId)} className={classes.profileImage} />
                 <Fab color='primary' size='large' className={classes.cameraButton}>
                   <label className={classes.imageInputLabel} htmlFor="imageInput">
                     <CameraAlt />

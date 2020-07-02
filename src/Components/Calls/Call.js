@@ -103,6 +103,7 @@ class Calls extends Component{
     });
     peer.on('signal', signalData => {
       try{
+        console.log("signalData", signalData)
         if(signalData.type === "answer"){
           console.log("send acceptance ackdata", signalData);
           this.props.sendAck(signalData);
@@ -132,7 +133,7 @@ class Calls extends Component{
     }
   }
   getMyVideoStream = () => {
-    return navigator.mediaDevices.getUserMedia({video: true, audio: false})
+    return navigator.mediaDevices.getUserMedia({video: true, audio: true})
     .then(myVideoStream => {
       this.previewRef.current.srcObject = myVideoStream;
       return myVideoStream;
@@ -190,7 +191,7 @@ class Calls extends Component{
     const {classes} = this.props;
     return (
       <Fragment>
-      <video onClick={this.handlePreviewClick} autoPlay ref={this.previewRef} className={classes.videoPreview} />
+      <video muted={true} onClick={this.handlePreviewClick} autoPlay ref={this.previewRef} className={classes.videoPreview} />
       <Dialog classes={{paper: classes.root}} fullScreen={true} open={this.state.openDialog}>
         {/* <Box className={classes.videoPreviewContainer} > */}
           <video ref={this.mainVideoRef} className={classes.mainVideo} />

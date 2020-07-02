@@ -18,7 +18,8 @@ class ImageThumbnail extends Component {
     return !this.state.imageError ? (
       <img
         onError={this.hanldeImageLoadError}
-        style={{
+        className={this.props.className}
+        style={this.props.className ? {} : {
           height: this.props.height || "128px",
           width: this.props.width || "128px",
           borderRadius: '200px'
@@ -42,7 +43,7 @@ class ImageThumbnail extends Component {
           borderRadius: "200px",
         }}
       >
-        <Person />
+        <Person style={this.props.fontSize ? {fontSize: this.props.fontSize} : {}} />
       </Box>
     );
   }
