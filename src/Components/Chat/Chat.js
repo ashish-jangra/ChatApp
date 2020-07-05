@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, Fragment } from "react";
 import { connect } from "react-redux";
 import {
   Box,
@@ -10,6 +10,7 @@ import {
 } from "@material-ui/core";
 import {
   Send as SendIcon,
+  GetApp as DownloadIcon,
   AttachFile,
   InsertDriveFile,
   InsertPhoto,
@@ -338,8 +339,25 @@ class Chat extends Component {
   };
   sendFile = file => {
     let fileType = file.type.slice(0, file.type.indexOf("/"));
-    let fileExtension = file.type.slice(file.type.lastIndexOf("/")+1);
-    console.log("fileType", file);
+    let fileExtension = file.name.slice(file.name.lastIndexOf(".")+1);
+    console.log("file", file, "fileType", {fileType, fileExtension});
+    if(fileType === "application" && fileExtension === "pdf"){
+      console.log("display pdf");
+      let newMsg = {
+        type: "pdf",
+        from: this.props.authData.email,
+        msg: file.name,
+        _id: this.fastRandId(),
+        uploaded: false
+      }
+      this.props.addChat({
+        contact: this.state.contact.email,
+        msg: newMsg
+      })
+      this.setState({
+        activateFileInput: false
+      })
+    }
   }
   handleFileInputChange = e => {
     let fileInput = e.target;
@@ -355,9 +373,27 @@ class Chat extends Component {
     }));
   closeFileInput = () => this.setState({ activateFileInput: false });
   openFileInput = () => this.setState({ activateFileInput: true });
+  getMessage = (chat, classes) => {
+    let spaces = <span style={{ marginLeft: "4em" }} />;
+    if(chat.type === "img")
+      return <img className={classes.chatImage} src={chat.msg} />
+    if(chat.type === "pdf")
+      return (
+        <Fragment>
+          <InsertDriveFile fontSize="small" />
+          <Typography variant="body2">
+            {chat.msg} {spaces}
+          </Typography>
+        </Fragment>
+      )
+    return (
+      <Typography variant="body2">
+        {chat.msg} {spaces}
+      </Typography>
+    )
+  }
   render() {
     const { classes } = this.props;
-    let spaces = <span style={{ marginLeft: "4em" }} />;
     return (
       <React.Fragment>
         <ChatHeader
@@ -403,13 +439,7 @@ class Chat extends Component {
                     (chat.type === "img" && classes.imageContainer)
                   }
                 >
-                  {chat.type === "img" ? (
-                    <img className={classes.chatImage} src={chat.msg} />
-                  ) : (
-                    <Typography variant="body2">
-                      {chat.msg} {spaces}
-                    </Typography>
-                  )}
+                  {this.getMessage(chat, classes)}
                   <Typography
                     variant="caption"
                     className={
@@ -426,7 +456,7 @@ class Chat extends Component {
           {this.state.activateFileInput && (
             <Zoom in={this.state.activateFileInput}>
               <Box className={classes.fileInputMenu}>
-                <IconButton className={classes.imageInputButton}>
+                <IconButton disabled={true} className={classes.imageInputButton}>
                   <label className={classes.fileInputLabel} htmlFor="fileInput">
                     <InsertDriveFile />
                   </label>
