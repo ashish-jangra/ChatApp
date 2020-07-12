@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import {connect} from 'react-redux';
 import { Paper, TextField, Container, Grid, Button, Card } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { AccountCircle as AccountCircleIcon, Email as EmailIcon, Call as ContactIcon } from '@material-ui/icons';
@@ -7,7 +8,7 @@ import {addContact} from '../serviceClass';
 
 const styles = (theme) => ({
   root: {
-    minHeight: '100vh'
+    height: '100%'
   },
 	rootContainer: {
 		padding: '16px',
@@ -74,8 +75,11 @@ class AddContact extends Component {
       name, email
     })
     .then(data=>{
-      console.log("[AddContact] handleAddContact received saved contact data", data)
-      this.props.history.replace(`/chat/${data.email}`, {
+      if(!data.contact || !data.saved)
+        throw new Error("no contact returned")
+      console.log("[AddContact] handleAddContact received saved contact data", data);
+      this.props.addContact(data.contact);
+      this.props.history.replace(`/chat/${data.contact.email}`, {
         contact: data.contact
       });
     })
@@ -107,7 +111,7 @@ class AddContact extends Component {
         <SimpleHeader headerText={{primary: 'Add Contact'}} />
 				<Paper className={classes.root} square>
 					<Container className={classes.rootContainer}>
-            <Card className={classes.contactInputCard}>
+            {/* <Card className={classes.contactInputCard}> */}
 						<Grid className={classes.row} container>
 							<Grid item xs={1}>
                 <AccountCircleIcon />
@@ -136,7 +140,7 @@ class AddContact extends Component {
                 </Button>
               </Grid>
             </Grid>
-            </Card>
+            {/* </Card> */}
 					</Container>
 				</Paper>
 			</Fragment>
@@ -144,4 +148,8 @@ class AddContact extends Component {
 	}
 }
 
-export default withStyles(styles)(AddContact);
+const mapDispatchToProps = dispatch => ({
+  addContact: (contact) => dispatch({type: 'ADD_CONTACT', contact})
+})
+
+export default connect(null, mapDispatchToProps)(withStyles(styles)(AddContact));

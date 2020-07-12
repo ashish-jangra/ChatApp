@@ -21,7 +21,12 @@ const rootReducer = (state = initialState, action) => {
   if(action.type === 'ADD_CHAT'){
     let contact = state.contacts.find(ct => ct.email === action.contact);
     if(!contact){
-      return state;
+      state.contacts.push({
+        email: action.contact,
+        name: action.contact,
+        chats: []
+      })
+      return {...state};
     }
     else{
       if(action.incUnread)
@@ -66,6 +71,13 @@ const rootReducer = (state = initialState, action) => {
         active: false
       }
     }
+  }
+  if(action.type === 'ADD_CONTACT'){
+    state.contacts.push({
+      ...action.contact,
+      chats: []
+    })
+    return {...state};
   }
   return state;
 }

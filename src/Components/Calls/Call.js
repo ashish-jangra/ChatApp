@@ -25,6 +25,7 @@ const styles = theme => ({
     left: '8px'
   },
   mainVideo: {
+    width: '100%',
     maxWidth: '100%',
     maxHeight: '100%'
   },
@@ -70,6 +71,7 @@ class Calls extends Component{
       trickle: false,
       stream: myVideoStream
     })
+    this.peer = peer;
     peer.on('signal', signalData => {
       this.props.socket.emit('requestCall', {
         userId: this.props.callData.userId,
@@ -93,6 +95,9 @@ class Calls extends Component{
     peer.on('data', data => {
       console.log("received data", typeof data === 'string' ? data : data.toString());
     })
+    peer.on('close', data => {
+      console.log("connection closed", data);
+    })
   }
   acceptCall = (myVideoStream) => {
     console.log("[call] acceptcall")
@@ -101,6 +106,7 @@ class Calls extends Component{
       trickle: false,
       stream: myVideoStream
     });
+    this.peer = peer;
     peer.on('signal', signalData => {
       try{
         console.log("signalData", signalData)
@@ -180,6 +186,9 @@ class Calls extends Component{
   }
   handleCallEnd = () => {
     this.props.clearCallData()
+    if(this.peer){
+      this.peer.destroy()
+    }
     if(this.mainVideoRef.current){
       this.stopTracks(this.mainVideoRef.current.srcObject)
     }

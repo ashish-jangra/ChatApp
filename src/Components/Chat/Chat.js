@@ -179,11 +179,7 @@ class Chat extends Component {
     if (this.props.location.state && this.props.location.state.contact) {
       contact = this.props.contacts.find(
         (ct) => ct.email === this.props.location.state.contact.email
-      ) || {
-        name: contact.name,
-        email: contact.email,
-        chats: [],
-      };
+      ) || dummyContact;
     } else {
       contact = dummyContact;
     }
