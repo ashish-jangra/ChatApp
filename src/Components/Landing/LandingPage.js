@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from "react";
+import {connect} from 'react-redux';
 import SwipeableViews from "react-swipeable-views";
 import {
   Box,
@@ -124,7 +125,45 @@ class LandingPage extends Component {
 	handleCloseSettingsMenu = () => this.setState({ openSettingsMenu: false });
 	handleProfileUpdate = () => {
 		this.props.history.push('/updateProfile')
-	}
+  }
+  handleReceiveMessage = (data) => {
+    // currently assuming personal maessage received
+    console.log("[landingpage]received a message, display on UI");
+    let {from} = data;
+    this.props.addChat({
+      contact: from,
+      incUnread: true,
+      msg: data
+    })
+    this.setState({
+      updated: true
+    })
+  };
+  handleMessagesSeen = (data) => {
+    console.log("msgs seen", data)
+    this.props.markMessagesSeen(data);
+    this.setState({
+      updated: true
+    })
+  }
+  addSocketEventListeners = () => {
+    let { socket } = this.props;
+    if (!socket) return;
+    socket.on("receiveMessage", this.handleReceiveMessage);
+    socket.on("msgsSeen", this.handleMessagesSeen);
+  };
+  removeSocketEventListeners = () => {
+    let { socket } = this.props;
+    if (!socket) return;
+    socket.removeEventListener("receiveMessage", this.handleReceiveMessage);
+    socket.removeEventListener("msgsSeen", this.handleMessagesSeen);
+  }
+  componentDidMount(){
+    this.addSocketEventListeners();
+  }
+  componentWillUnmount(){
+    this.removeSocketEventListeners();
+  }
   render() {
     const { classes, ...remProps } = this.props;
     return (
@@ -205,4 +244,10 @@ class LandingPage extends Component {
   }
 }
 
-export default withStyles(styles)(LandingPage);
+const mapDispatchToProps = dispatch => ({
+  markMessagesSeen: (payload) => dispatch({type: "MARK_MSGS_SEEEN", ...payload}),
+  addChat: (payload) => dispatch({type: 'ADD_CHAT', ...payload}),
+  setUnreadMsg: (contact, count) => dispatch({type: 'SET_UNREAD_MESSAGE', contact, count})
+})
+
+export default connect(null, mapDispatchToProps)(withStyles(styles)(LandingPage));

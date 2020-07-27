@@ -14,6 +14,9 @@ import {
   AttachFile,
   InsertDriveFile,
   InsertPhoto,
+  Done as DeliveredIcon,
+  DoneAll as SeenIcon,
+  Schedule,
 } from "@material-ui/icons";
 import { withStyles } from "@material-ui/core/styles";
 import ChatHeader from "../Header/ChatHeader";
@@ -52,11 +55,18 @@ const styles = (theme) => ({
     backgroundColor: "white",
   },
   chatFeedback: {
+    display: "flex",
     position: "absolute",
     fontSize: "0.7rem",
     bottom: "2px",
     right: "12px",
     color: "gray",
+  },
+  feedbackIcon: {
+    fontSize: "1rem"
+  },
+  deliveredIcon: {
+    color: "#34B7F1"
   },
   multimediaFeedback: {
     position: "absolute",
@@ -203,7 +213,8 @@ class Chat extends Component {
     let newMsg = {
       from: this.props.authData.email,
       msg: message,
-      sent: new Date()
+      sent: new Date(),
+      pending: true
     }
     if (contact.type === "group") {
       this.props.socket.emit("sendMessageInGroup", {
@@ -217,17 +228,17 @@ class Chat extends Component {
       }, ack => {
         console.log("received ack", ack)
         newMsg._id = ack._id
+        newMsg.delivered = ack.delivered
+        newMsg.pending = false
+        this.setState({
+          updated: true
+        })
       });
     }
     this.props.addChat({
       contact: this.state.contact.email,
       msg: newMsg
     })
-    // if (contact.chats && Number.isInteger(contact.chats.length))
-    //   contact.chats.push(newMsg);
-    // else
-    //   contact.chats = [ newMsg ];
-    // focus again on msg input
     this.inputRef.current && this.inputRef.current.focus();
     this.setState({ messageText: "" });
   };
@@ -275,6 +286,15 @@ class Chat extends Component {
       });
     }
   };
+  handleMessagesSeen = (data) => {
+    console.log("msgs seen", data)
+    this.props.markMessagesSeen(data);
+    if(data.email === this.state.contact.email){
+      this.setState({
+        updated: true
+      })
+    }
+  }
   componentDidMount() {
     setTimeout(this.scrollToBottom, 500);
     const { socket } = this.props;
@@ -284,12 +304,17 @@ class Chat extends Component {
     // 	groupName: this.props.match.params.contact
     // })
     socket.on("receiveMessage", this.handleReceiveMessage);
+    socket.on("msgsSeen", this.handleMessagesSeen);
   }
   componentWillUnmount() {
     this.props.socket.off("test");
     this.props.socket.removeEventListener(
       "receiveMessage",
       this.handleReceiveMessage
+    );
+    this.props.socket.removeEventListener(
+      "msgsSeen",
+      this.handleMessagesSeen
     );
   }
   fastRandId = () => new Date().getTime().toString(36) + Math.random().toString(36).substring(2, 16) + Math.random().toString(36).substring(2, 16)
@@ -369,8 +394,8 @@ class Chat extends Component {
     }));
   closeFileInput = () => this.setState({ activateFileInput: false });
   openFileInput = () => this.setState({ activateFileInput: true });
-  getMessage = (chat, classes) => {
-    let spaces = <span style={{ marginLeft: "4em" }} />;
+  getMessage = (chat, classes, wider) => {
+    let spaces = <span style={{ marginLeft: wider ? "5.5em" : "4em" }} />;
     if(chat.type === "img")
       return <img className={classes.chatImage} src={chat.msg} />
     if(chat.type === "pdf")
@@ -387,6 +412,15 @@ class Chat extends Component {
         {chat.msg} {spaces}
       </Typography>
     )
+  }
+  getFeedbackIcon = (chat, classes) => {
+    if(chat.seen)
+      return <SeenIcon className={`${classes.feedbackIcon} ${classes.deliveredIcon}`} />;
+    if(!chat.pending)
+      return <SeenIcon className={classes.feedbackIcon} />
+    // if(!chat.pending)
+    //   return <DeliveredIcon className={classes.feedbackIcon} />
+    return <Schedule className={classes.feedbackIcon} />;
   }
   render() {
     const { classes } = this.props;
@@ -435,7 +469,7 @@ class Chat extends Component {
                     (chat.type === "img" && classes.imageContainer)
                   }
                 >
-                  {this.getMessage(chat, classes)}
+                  {this.getMessage(chat, classes, chat.from === this.props.authData.email)}
                   <Typography
                     variant="caption"
                     className={
@@ -444,7 +478,7 @@ class Chat extends Component {
                         : classes.chatFeedback
                     }
                   >
-                    {getChatTimeString(chat.sent)}
+                    {getChatTimeString(chat.sent)}{chat.from === this.props.authData.email && <Fragment>&nbsp;{this.getFeedbackIcon(chat, classes)}</Fragment>}
                   </Typography>
                 </Box>
               </Box>
@@ -531,6 +565,7 @@ const mapDispatchToProps = (dispatch) => ({
   addChat: (payload) => dispatch({ type: "ADD_CHAT", ...payload }),
   clearUnreadMsg: (contact) =>
     dispatch({ type: "SET_UNREAD_MESSAGE", contact, count: 0 }),
+  markMessagesSeen: (payload) => dispatch({type: "MARK_MSGS_SEEEN", ...payload})
 });
 
 export default connect(

@@ -5,11 +5,15 @@ import {withStyles} from '@material-ui/core/styles';
 import { getAuth } from '../serviceClass';
 
 const styles = theme=> ({
-  inputCard: {
-    padding: '8px',
-    margin: '8px'
+  root: {
+    height: '100%',
+    padding: '16px'
+  },
+  loginButton: {
+    marginTop: '8px'
   },
   input: {
+    margin: '4px 0px',
     width: '100%'
   }
 })
@@ -71,15 +75,15 @@ class LoginPage extends Component{
   render(){
     const {classes} = this.props;
     return (
-      <Paper>
-        <Card className={classes.inputCard}>
+      <Paper square className={classes.root}>
+        {/* <Card className={classes.inputCard}> */}
           <Input onKeyPress={this.handleKeyPress} autoFocus={true} placeholder="Name..." type="text" classes={{root: classes.input}} onChange={(e)=>this.handleInputChange(e,'name')} value={this.state.name} />
           <Input placeholder="Email..." type="email" classes={{root: classes.input}} onChange={(e)=>this.handleInputChange(e,'email')} value={this.state.email} />
           <Input onKeyPress={this.handleKeyPress} placeholder="Password..." type="password" classes={{root: classes.input}} onChange={(e)=>this.handleInputChange(e,'password')} value={this.state.password} />
-          <Button onClick={this.handleSubmit} color="secondary" variant="contained">
+          <Button className={classes.loginButton} onClick={this.handleSubmit} color="secondary" variant="contained">
             Log In
           </Button>
-        </Card>
+        {/* </Card> */}
       </Paper>
     )
   }

@@ -24,7 +24,7 @@ const rootReducer = (state = initialState, action) => {
       state.contacts.push({
         email: action.contact,
         name: action.contact,
-        chats: []
+        chats: [action.msg]
       })
       return {...state};
     }
@@ -52,6 +52,19 @@ const rootReducer = (state = initialState, action) => {
     }
     else{
       contact.unreadMessages = (contact.unreadMessages || 0) + 1;
+      return {...state};
+    }
+  }
+  if(action.type === 'MARK_MSGS_SEEEN'){
+    let contact = state.contacts.find(ct => ct.email === action.email);
+    if(!contact || !contact.chats || !contact.chats.length){
+      return state;
+    }
+    else{
+      let {chats} = contact;
+      for(let i = chats.length-1; i >= 0 && !chats[i].seen; i--){
+        chats[i].seen = new Date(action.time)
+      }
       return {...state};
     }
   }

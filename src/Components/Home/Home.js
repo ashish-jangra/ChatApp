@@ -98,26 +98,6 @@ class Home extends Component {
     }
     return 0;
   };
-  handleReceiveMessage = (data) => {
-    // currently assuming personal maessage received
-    console.log("[home]received a message, display on UI");
-    let {from} = data;
-    this.props.addChat({
-      contact: from,
-      incUnread: true,
-      msg: data
-    })
-    let presentableContacts = this.getPresentableContacts(this.props.contacts);
-    this.setState({
-      presentableContacts,
-      updated: true
-    })
-  };
-  addSocketEventListeners = () => {
-    let { socket } = this.props;
-    if (!socket) return;
-    socket.on("receiveMessage", this.handleReceiveMessage);
-  };
   getPresentableContacts = contacts => {
     let presentableContacts = contacts.filter(
       (contact) => contact.chats.length > 0
@@ -147,7 +127,6 @@ class Home extends Component {
       });
   };
   componentDidMount() {
-    this.addSocketEventListeners();
     this.getContactsReady();
   }
   componentWillUnmount() {
@@ -210,8 +189,8 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   setContacts: (contacts)=> dispatch({type: 'SET_CONTACTS', contacts}),
-  addChat: (payload) => dispatch({type: 'ADD_CHAT', ...payload}),
-  setUnreadMsg: (contact, count) => dispatch({type: 'SET_UNREAD_MESSAGE', contact, count})
+  // addChat: (payload) => dispatch({type: 'ADD_CHAT', ...payload}),
+  // setUnreadMsg: (contact, count) => dispatch({type: 'SET_UNREAD_MESSAGE', contact, count})
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(Home));

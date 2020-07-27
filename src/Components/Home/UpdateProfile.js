@@ -31,7 +31,7 @@ const styles = (theme) => ({
   cameraButton: {
     position: 'absolute',
     bottom: 0,
-    right: 0,
+    right: '8px',
     boxShadow: 'none'
   },
   imageInputLabel: {
