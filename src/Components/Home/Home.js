@@ -9,6 +9,7 @@ import {
   Grid,
   Box,
 	Badge,
+  Typography,
 } from "@material-ui/core";
 import {connect} from 'react-redux';
 import {
@@ -19,7 +20,7 @@ import {
 } from "@material-ui/icons";
 import { withStyles } from "@material-ui/core/styles";
 import { getContacts, getDateObject } from "../serviceClass";
-import {getHomeTimeString} from '../Utility/CommonFunctions';
+import {getHomeTimeString, decrypt} from '../Utility/CommonFunctions';
 import ImageThumbnail from '../Utility/imgThumbnail';
 import config from "../config";
 
@@ -137,6 +138,16 @@ class Home extends Component {
         this.handleReceiveMessage
       );
   }
+  getMessage = (contact, chat) => {
+    let {msg} = chat;
+    try{
+      msg = decrypt(msg, contact.key, contact.iv)
+    }
+    catch(err){
+      console.log("error decrypting message", err);
+    }
+    return msg;
+  }
   render() {
     const { classes } = this.props;
     return (
@@ -155,7 +166,7 @@ class Home extends Component {
                 }}
                 primary={(<Grid container>
 									<Grid className={`${classes.contactName} ${contact.unreadMessages && classes.bold}`} item xs={9}>
-										{contact.name}
+										<Typography variant="body1">{contact.name}</Typography>
 									</Grid>
 									<Grid className={`${classes.secondaryText} ${contact.unreadMessages && classes.unreadMsgTime}`} item xs={3}>
 										{getHomeTimeString(contact.chats[contact.chats.length - 1].sent)}
@@ -164,7 +175,7 @@ class Home extends Component {
                 secondary={
 									(<span className={classes.gridContainer}>
 										<span className={`${classes.overflowText} ${contact.unreadMessages && classes.unreadMsg} ${contact.unreadMessages ? classes.item11 : classes.item12}`}>
-                  		{contact.chats[contact.chats.length - 1].type === 'img' ? <Fragment> <Image fontSize="small" />&nbsp;Photo</Fragment> : contact.chats[contact.chats.length - 1].msg}
+                  		{contact.chats[contact.chats.length - 1].type === 'img' ? <Fragment> <Image fontSize="small" />&nbsp;Photo</Fragment> : this.getMessage(contact, contact.chats[contact.chats.length - 1])}
 										</span>
 										{contact.unreadMessages > 0 && (
 											<span className={classes.item1}>

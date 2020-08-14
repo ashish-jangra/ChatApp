@@ -203,7 +203,7 @@ class Calls extends Component{
       <video muted={true} onClick={this.handlePreviewClick} autoPlay ref={this.previewRef} className={classes.videoPreview} />
       <Dialog classes={{paper: classes.root}} fullScreen={true} open={this.state.openDialog}>
         {/* <Box className={classes.videoPreviewContainer} > */}
-          <video ref={this.mainVideoRef} className={classes.mainVideo} />
+          <video onError={this.handleCallEnd} ref={this.mainVideoRef} className={classes.mainVideo} />
           <Fab size="small" className={classes.closeButton} onClick={this.closeDialog}>
             <Close fontSize="small" />
           </Fab>

@@ -20,7 +20,7 @@ import {
 } from "@material-ui/icons";
 import { withStyles } from "@material-ui/core/styles";
 import ChatHeader from "../Header/ChatHeader";
-import { getChatTimeString } from "../Utility/CommonFunctions";
+import { getChatTimeString, encrypt, decrypt } from "../Utility/CommonFunctions";
 import { sendImage } from "../serviceClass";
 import CONFIG from "../config";
 
@@ -108,7 +108,7 @@ const styles = (theme) => ({
   },
   textFieldRoot: {
     width: "100%",
-    fontSize: "0.875rem",
+    ...theme.typography.body1
   },
   fab: {
     padding: "12px",
@@ -208,7 +208,7 @@ class Chat extends Component {
     });
   };
   handleMessageSend = () => {
-    let message = this.state.messageText.trim();
+    let message = encrypt(this.state.messageText.trim(), this.state.contact.key, this.state.contact.iv);
     let contact = JSON.parse(JSON.stringify(this.state.contact));
     let newMsg = {
       from: this.props.authData.email,
@@ -395,21 +395,28 @@ class Chat extends Component {
   closeFileInput = () => this.setState({ activateFileInput: false });
   openFileInput = () => this.setState({ activateFileInput: true });
   getMessage = (chat, classes, wider) => {
-    let spaces = <span style={{ marginLeft: wider ? "5.5em" : "4em" }} />;
+    let spaces = <span style={{ marginLeft: wider ? "4.75em" : "3.5em" }} />;
+    let {msg} = chat;
+    try{
+      msg = decrypt(msg, this.state.contact.key, this.state.contact.iv)
+    }
+    catch(err){
+      console.log("msg decryption error", err);
+    }
     if(chat.type === "img")
-      return <img className={classes.chatImage} src={chat.msg} />
+      return <img className={classes.chatImage} src={msg} />
     if(chat.type === "pdf")
       return (
         <Fragment>
           <InsertDriveFile fontSize="small" />
-          <Typography variant="body2">
-            {chat.msg} {spaces}
+          <Typography variant="body1">
+            {msg} {spaces}
           </Typography>
         </Fragment>
       )
     return (
-      <Typography variant="body2">
-        {chat.msg} {spaces}
+      <Typography variant="body1">
+        {msg} {spaces}
       </Typography>
     )
   }

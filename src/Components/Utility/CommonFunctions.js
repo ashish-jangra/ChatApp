@@ -1,3 +1,20 @@
+const crypto = require('crypto');
+
+export const encrypt = (text, key, iv) => {
+  console.log({key,iv})
+  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key, 'hex'), Buffer.from(iv, 'hex'));
+  let encrypted = cipher.update(text);
+  encrypted = Buffer.concat([encrypted, cipher.final()])
+  return encrypted.toString('hex');
+}
+
+export const decrypt = (text, key, iv) => {
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key, 'hex'), Buffer.from(iv, 'hex'));
+  let decrypted = decipher.update(Buffer.from(text, 'hex'));
+  decrypted = Buffer.concat([decrypted, decipher.final()])
+  return decrypted.toString('ascii');
+}
+
 const formatNum = num => ("0"+num).slice(-2);
 export const getHomeTimeString = (date) => {
   if(!date)

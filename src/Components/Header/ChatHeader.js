@@ -15,8 +15,10 @@ import ImageThumbnail from '../Utility/imgThumbnail';
 import config from '../config';
 
 const styles = (theme) => {
+	console.log(theme)
 	return {
 		heading: {
+			...theme.typography.body1,
 			display: 'inline',
 			textTransform: 'capitalize',
 			padding: '12px 8px',
